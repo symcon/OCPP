@@ -47,7 +47,7 @@ declare(strict_types=1);
                         3,
                         $this->ReadPropertyString('messageID'),
                         []
-                     ];
+                    ];
                     break;
                 case 'StartTransaction':
                     //TODO not fully implemented / check is miss (Accepted or other)
@@ -89,9 +89,9 @@ declare(strict_types=1);
                     # code...
                     break;
             }
-            if(isset($buffer)){
+            if (isset($buffer)) {
                 $this->SendDataToParent(json_encode(['DataID' => '{8B051B38-91B7-97B3-2F99-BCB86C0925FA}', 'Buffer' => $buffer]));
-            }            
+            }
         }
 
         private function setMeterValue($message)

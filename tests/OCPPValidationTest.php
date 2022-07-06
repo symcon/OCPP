@@ -17,7 +17,7 @@ class OCPPValidationTest extends TestCaseSymconValidation
     {
         $this->validateModule(__DIR__ . '/../OCPP Konfigurator');
     }
-    
+
     public function testValidateOCPPSplitterModule(): void
     {
         $this->validateModule(__DIR__ . '/../OCPP Splitter');
