@@ -1,0 +1,16 @@
+{
+    "id": "{2EDDBD05-F295-3A79-00BD-B2FC0F107134}",
+    "name": "OCPP Charging Point",
+    "type": 3,
+    "vendor": "",
+    "aliases": [],
+    "parentRequirements": [
+        "{8B051B38-91B7-97B3-2F99-BCB86C0925FA}"
+    ],
+    "childRequirements": [],
+    "implemented": [
+        "{54E04042-D715-71A0-BA80-ADD8B6CDF151}"
+    ],
+    "prefix": "OCPPD",
+    "url": ""
+}

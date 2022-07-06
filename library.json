@@ -1,0 +1,12 @@
+{
+    "id": "{80EFBF49-B7BC-F614-CE70-A2C25D354D23}",
+    "name": "OCPP Central System",
+    "author": "Symcon",
+    "url": "https://github.com/symcon/OCPP",
+    "compatibility": {
+        "version": "6.0"
+    },
+    "version": "1.0",
+    "build": 0,
+    "date": 0
+}

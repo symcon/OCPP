@@ -1,0 +1,16 @@
+{
+    "id": "{D048F0F0-0015-E50B-E8EC-731998FDFDA8}",
+    "name": "OCPP Splitter",
+    "type": 2,
+    "vendor": "",
+    "aliases": [],
+    "parentRequirements": [],
+    "childRequirements": [
+        "{54E04042-D715-71A0-BA80-ADD8B6CDF151}"
+    ],
+    "implemented": [
+        "{8B051B38-91B7-97B3-2F99-BCB86C0925FA}"
+    ],
+    "prefix": "OCPPS",
+    "url": ""
+}

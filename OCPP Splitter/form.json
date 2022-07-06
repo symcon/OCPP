@@ -1,0 +1,11 @@
+{
+    "elements": [
+        {
+            "type": "ValidationTextBox",
+            "name": "Address",
+            "caption": "Websocket-Address"
+        }
+    ],
+    "actions": [],
+    "status": []
+}
