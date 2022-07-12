@@ -1,6 +1,6 @@
 {
     "id": "{C7E6CEB8-D0B7-52D2-72E7-DE8D35FD7069}",
-    "name": "OCPP Konfigurator",
+    "name": "OCPP Configurator",
     "type": 4,
     "vendor": "",
     "aliases": [],
@@ -11,6 +11,6 @@
     "implemented": [
         "{54E04042-D715-71A0-BA80-ADD8B6CDF151}"
     ],
-    "prefix": "OCPPK",
+    "prefix": "OCPP",
     "url": "https://github.com/symcon/OCPP/OCPP%20Konfigurator"
 }

@@ -1,9 +1,10 @@
 {
     "translations": {
         "de": {
+            "Charging Points": "Ladestationen",
             "Vendor": "Hersteller",
             "Serial Number": "Seriennummer",
-            "MessageID": "NachrichtenID"
+            "MessageID": "Nachrichten ID"
         }
     }
 }

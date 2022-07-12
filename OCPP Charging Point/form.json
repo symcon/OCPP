@@ -1,23 +1,23 @@
 {
     "elements": [
         {
-            "name": "vendor",
+            "name": "Vendor",
             "caption": "Vendor",
             "type": "ValidationTextBox"
         },
         {
             "caption": "Model",
-            "name": "model",
+            "name": "Model",
             "type": "ValidationTextBox"
         },
         {
             "caption": "Serial Number",
-            "name": "serialNumber",
+            "name": "SerialNumber",
             "type": "ValidationTextBox"
         },
         {
             "caption": "MesseageID",
-            "name": "messageID",
+            "name": "MessageID",
             "type": "ValidationTextBox"
         }
     ],

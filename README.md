@@ -3,10 +3,10 @@
 Folgende Module beinhaltet das OCPP Central System Repository:
 
 - __OCPP Splitter__ ([Dokumentation](OCPP%20Splitter))  
-	Empfängt die Daten eines Hooks und leitet diese an die Kind-Objekte weiter
+	Kümmert sich um die Kommunikation
 
 - __OCPP Konfigurator__ ([Dokumentation](OCPP%20Konfigurator))  
-	Erleichtert die Konfiguration Eines Ladepunktes
+	Erleichtert die Konfiguration eines Ladepunktes
 
 - __OCPP Charging Point__ ([Dokumentation](OCPP%20Charging%20Point))  
-	Bildet einen Ladepunkt ab.
+	Bildet einen Ladepunkt ab
