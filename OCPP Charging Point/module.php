@@ -148,11 +148,11 @@ class OCPPChargingPoint extends IPSModule
         $currentTime = 0;
         foreach ($values as $value) {
             //Get the timestamp
-            //Timestamp is in ISO8601 
+            //Timestamp is in ISO8601
             $timestamp = $value['timestamp'];
             $unix = strtotime($timestamp);
 
-            //If the timestamp is higher than the previous, save it and the value. We only want the newest one 
+            //If the timestamp is higher than the previous, save it and the value. We only want the newest one
             if ($unix > $currentTime) {
                 $currentTime = $unix;
                 $currentValue = array_sum(array_column($value['sampledValue'], 'value'));

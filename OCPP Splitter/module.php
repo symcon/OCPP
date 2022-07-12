@@ -35,24 +35,6 @@ include_once __DIR__ . '/../libs/WebHookModule.php';
             $this->send($buffer);
         }
 
-        private function send($package)
-        {
-            $package = json_encode($package);
-            WC_PushMessage(IPS_GetInstanceListByModuleID('{015A6EB8-D6E5-4B93-B496-0D3F77AE9FE1}')[0], '/hook/ocpp/' . $this->InstanceID, $package);
-        }
-
-        private function getBootNotificationResponse(string $messageID){
-            return [
-                CALLRESULT,
-                $messageID,
-                [
-                    'status'      => 'Accepted',
-                    'currentTime' => date(DateTime::ISO8601),
-                    'interval'    => 60
-                ]
-            ];
-        }
-
         protected function ProcessHookData()
         {
             //Get the input
@@ -65,21 +47,39 @@ include_once __DIR__ . '/../libs/WebHookModule.php';
              * OCPP-j-1.6-specification Page 13
              * Input[1] is the MessageID
              * Input[2] is the MessageType
-             * 
+             *
              * Switch because there can be more MessageTypes
              */
             switch ($input[2]) {
                 case 'BootNotification':
-                    $this->SendDebug("Hi","hshg",0);
+                    $this->SendDebug('Hi', 'hshg', 0);
                     $package = $this->getBootNotificationResponse($input[1]);
                     break;
-                
+
                 default:
-                    $package = "";
+                    $package = '';
                     break;
             }
 
-           $this->send($package);
+            $this->send($package);
+        }
 
+        private function send($package)
+        {
+            $package = json_encode($package);
+            WC_PushMessage(IPS_GetInstanceListByModuleID('{015A6EB8-D6E5-4B93-B496-0D3F77AE9FE1}')[0], '/hook/ocpp/' . $this->InstanceID, $package);
+        }
+
+        private function getBootNotificationResponse(string $messageID)
+        {
+            return [
+                CALLRESULT,
+                $messageID,
+                [
+                    'status'      => 'Accepted',
+                    'currentTime' => date(DateTime::ISO8601),
+                    'interval'    => 60
+                ]
+            ];
         }
     }

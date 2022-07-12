@@ -39,12 +39,11 @@ class OCPPConfigurator extends IPSModule
     }
 
     public function GetConfigurationForm()
-    {   
+    {
         /**
          * Payload of BootMessage
          * OCPP-j-1.6-edition 2.pdf Page 65 BootNotification.req
          */
-
         $availablePoints = [];
 
         //Get the points who send BootMessages
