@@ -12,12 +12,13 @@ class OCPPChargingPoint extends IPSModule
         parent::Create();
 
         //Properties
-        $this->RegisterPropertyString('Vendor', '');
-        $this->RegisterPropertyString('Model', '');
-        $this->RegisterPropertyString('SerialNumber', '');
-        $this->RegisterPropertyString('MessageID', '');
+        $this->RegisterPropertyString('ChargePointIdentity', '');
 
         //Variables
+        $this->RegisterVariableString('Vendor', $this->Translate('Vendor'));
+        $this->RegisterVariableString('Model', $this->Translate('Model'));
+        $this->RegisterVariableString('SerialNumber', $this->Translate('SerialNumber'));
+
         $this->RegisterVariableFloat('MeterValue', $this->Translate('Meter Value'), '~Electricity.Wh');
         $this->RegisterVariableBoolean('Transaction', $this->Translate('Transaction run'));
     }
@@ -33,42 +34,52 @@ class OCPPChargingPoint extends IPSModule
         //Never delete this line!
         parent::ApplyChanges();
 
-        $this->SetReceiveDataFilter('.*' . $this->ReadPropertyString('MessageID') . '.*');
+        $this->SetReceiveDataFilter('.*' . $this->ReadPropertyString('ChargePointIdentity') . '.*');
     }
 
     public function ReceiveData($JSONString)
     {
         $data = json_decode($JSONString, true);
-        //$this->SendDebug('DATA', $JSONString, 0);
-        $messageType = $data['Buffer'][2];
-        $payload = $data['Buffer'][3];
+        $this->SendDebug('Received', json_encode($data['Message']), 0);
         $messageID = $this->ReadPropertyString('MessageID');
+        $messageType = $data['Message'][2];
+        $payload = $data['Message'][3];
         //$this->SendDebug('messageType', $messageType, 0);
         switch ($messageType) {
+            case 'BootNotification':
+                $this->SetValue('Vendor', $payload['chargePointVendor']);
+                $this->SetValue('Model', $payload['chargePointModel']);
+                $this->SetValue('SerialNumber', $payload['chargePointSerialNumber']);
+                // No Feedback. Feedback is send by the Splitter
+                break;
             case 'MeterValues':
                 $this->setMeterValue($payload);
-                $buffer = $this->getMeterValueResponse($messageID);
+                $message = $this->getMeterValueResponse($messageID);
                 break;
             case 'StartTransaction':
                 //TODO not fully implemented / check is miss (Accepted or other)
-                $buffer = $this->getStartTransactionResponse($messageID);
+                $message = $this->getStartTransactionResponse($messageID);
                 $this->SetValue('Transaction', true);
                 break;
             case 'StopTransaction':
                 //TODO not fully implemented check if it accepted miss
-                $buffer = $this->getStopTransactionResponse($messageID);
+                $message = $this->getStopTransactionResponse($messageID);
                 $this->SetValue('Transaction', false);
                 break;
             case 'Heartbeat':
-                $buffer = $this->getHeartbeatResponse($messageID);
+                $message = $this->getHeartbeatResponse($messageID);
                 break;
             default:
-                # code...
                 break;
         }
 
-        if (isset($buffer)) {
-            $this->SendDataToParent(json_encode(['DataID' => '{8B051B38-91B7-97B3-2F99-BCB86C0925FA}', 'Buffer' => $buffer]));
+        if (isset($message)) {
+            $this->SendDebug('Transmitted', json_encode($message), 0);
+            $this->SendDataToParent(json_encode([
+                'DataID' => '{8B051B38-91B7-97B3-2F99-BCB86C0925FA}',
+                'ChargePointIdentity' => $this->ReadPropertyString('ChargePointIdentity'),
+                'Message' => $message
+            ]));
         }
     }
 

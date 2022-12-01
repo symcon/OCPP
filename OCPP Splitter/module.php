@@ -27,17 +27,24 @@ include_once __DIR__ . '/../libs/WebHookModule.php';
 
         public function ForwardData($data)
         {
-            $this->send(json_decode($data)->Buffer);
+            $data = json_decode($data);
+            $this->send($data->ChargePointIdentity, $data->Message);
         }
 
         protected function ProcessHookData()
         {
-            $data = file_get_contents('php://input');
-            $this->SendDebug('Receive', $data, 0);
-            $data = json_decode($data);
+            $message = file_get_contents('php://input');
+            $this->SendDebug('Receive', $message, 0);
+            $message = json_decode($message);
+            
+            $chargePointIdentity = str_replace('/hook/ocpp/' . $this->InstanceID . '/', '', $_SERVER['REQUEST_URI']);
             
             //Send it to the children
-            $this->SendDataToChildren(json_encode(['DataID'=> '{54E04042-D715-71A0-BA80-ADD8B6CDF151}', 'Buffer' => $data]));
+            $this->SendDataToChildren(json_encode([
+                'DataID'=> '{54E04042-D715-71A0-BA80-ADD8B6CDF151}',
+                'ChargePointIdentity' => $chargePointIdentity,
+                'Message' => $message
+            ]));
 
             /**
              * OCPP-j-1.6-specification Page 13
@@ -46,9 +53,9 @@ include_once __DIR__ . '/../libs/WebHookModule.php';
              *
              * Switch because there can be more MessageTypes
              */
-            switch ($data[2]) {
+            switch ($message[2]) {
                 case 'BootNotification':
-                    $this->send($this->getBootNotificationResponse($data[1]));
+                    $this->send($chargePointIdentity, $this->getBootNotificationResponse($message[1]));
                     break;
 
                 default:
@@ -70,11 +77,12 @@ include_once __DIR__ . '/../libs/WebHookModule.php';
             return json_encode($form);
         }
         
-        private function send($package)
+        private function send($chargePointIdentity, $message)
         {
-            $package = json_encode($package);
-            $this->SendDebug('Transmit', $package, 0);
-            WC_PushMessage(IPS_GetInstanceListByModuleID('{015A6EB8-D6E5-4B93-B496-0D3F77AE9FE1}')[0], '/hook/ocpp/' . $this->InstanceID, $package);
+            $message = json_encode($message);
+            $this->SendDebug('Transmit', $message, 0);
+            $id = IPS_GetInstanceListByModuleID('{015A6EB8-D6E5-4B93-B496-0D3F77AE9FE1}')[0];
+            WC_PushMessage($id, '/hook/ocpp/' . $this->InstanceID. '/' . $chargePointIdentity, $message);
         }
 
         private function getBootNotificationResponse(string $messageID)

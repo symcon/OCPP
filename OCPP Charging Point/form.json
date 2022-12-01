@@ -1,23 +1,8 @@
 {
     "elements": [
         {
-            "name": "Vendor",
-            "caption": "Vendor",
-            "type": "ValidationTextBox"
-        },
-        {
-            "caption": "Model",
-            "name": "Model",
-            "type": "ValidationTextBox"
-        },
-        {
-            "caption": "Serial Number",
-            "name": "SerialNumber",
-            "type": "ValidationTextBox"
-        },
-        {
-            "caption": "MesseageID",
-            "name": "MessageID",
+            "caption": "Charge Point Identity",
+            "name": "ChargePointIdentity",
             "type": "ValidationTextBox"
         }
     ],

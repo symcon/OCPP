@@ -28,12 +28,10 @@ class OCPPConfigurator extends IPSModule
 
     public function ReceiveData($JSON)
     {
-        //store the recive data in a Buffer
-        $jsonArray = json_decode($JSON, true);
-        $messageID = $jsonArray['Buffer'][1];
-        $payload = json_encode($jsonArray['Buffer'][3]);
+        $data = json_decode($JSON, true);
 
-        $this->SetBuffer($messageID, $payload);
+        //store the received BootNotification payload in a Buffer
+        $this->SetBuffer($data['ChargePointIdentity'], json_encode($data['Message'][3]));
 
         return $this->InstanceID;
     }
@@ -44,25 +42,22 @@ class OCPPConfigurator extends IPSModule
          * Payload of BootMessage
          * OCPP-j-1.6-edition 2.pdf Page 65 BootNotification.req
          */
-        $availablePoints = [];
+        $availableChargePoints = [];
 
         //Get the points who send BootMessages
         $bufferList = $this->GetBufferList();
-        foreach ($bufferList as $messageID) {
-            $buffer = $this->GetBuffer($messageID);
-            $message = json_decode($buffer, true);
-            $availablePoints[] = [
-                'Vendor'       => $message['chargePointVendor'],
-                'Model'        => $message['chargePointModel'],
-                'SerialNumber' => $message['chargePointSerialNumber'],
-                'MessageID'    => $messageID,
-                'create'       => [
+        foreach ($bufferList as $chargePointIdentity) {
+            $buffer = $this->GetBuffer($chargePointIdentity);
+            $payload = json_decode($buffer, true);
+            $availableChargePoints[] = [
+                'Vendor'              => $payload['chargePointVendor'],
+                'Model'               => $payload['chargePointModel'],
+                'SerialNumber'        => $payload['chargePointSerialNumber'],
+                'ChargePointIdentity' => $chargePointIdentity,
+                'create'              => [
                     'moduleID'      => '{2EDDBD05-F295-3A79-00BD-B2FC0F107134}',
                     'configuration' => [
-                        'Vendor'       => $message['chargePointVendor'],
-                        'Model'        => $message['chargePointModel'],
-                        'SerialNumber' => $message['chargePointSerialNumber'],
-                        'MessageID'    => $messageID,
+                        'ChargePointIdentity' => $chargePointIdentity,
                     ]
                 ]
             ];
@@ -70,15 +65,20 @@ class OCPPConfigurator extends IPSModule
 
         //Get the Instance and set the right ids or add it to the list
         foreach (IPS_GetInstanceListByModuleID('{2EDDBD05-F295-3A79-00BD-B2FC0F107134}') as $instanceID) {
-            if (in_array(IPS_GetProperty($instanceID, 'MessageID'), $bufferList)) {
-                $key = array_search(array_column($availablePoints, 'instanceID'), $availablePoints);
-                $availablePoints[$key]['instanceID'] = $instanceID;
-            } else {
-                $availablePoints[] = [
-                    'Vendor'       => IPS_GetProperty($instanceID, 'Vendor'),
-                    'Model'        => IPS_GetProperty($instanceID, 'Model'),
-                    'SerialNumber' => IPS_GetProperty($instanceID, 'SerialNumber'),
-                    'MessageID'    => IPS_GetProperty($instanceID, 'MessageID'),
+            $found = false;
+            foreach($availableChargePoints as $index => $availableChargePoint) {
+                if ($availableChargePoint['ChargePointIdentity'] == IPS_GetProperty($instanceID, 'ChargePointIdentity')) {
+                    $availableChargePoints[$index]['instanceID'] = $instanceID;
+                    $found = true;
+                    break;
+                }
+            }
+            if (!$found) {
+                $availableChargePoints[] = [
+                    'Vendor'       => GetValue(IPS_GetObjectIDByIdent('Vendor', $instanceID)),
+                    'Model'        => GetValue(IPS_GetObjectIDByIdent('Model', $instanceID)),
+                    'SerialNumber' => GetValue(IPS_GetObjectIDByIdent('SerialNumber', $instanceID)),
+                    'ChargePointIdentity'    => IPS_GetProperty($instanceID, 'ChargePointIdentity'),
                     'InstanceID'   => $instanceID,
                 ];
             }
@@ -106,13 +106,13 @@ class OCPPConfigurator extends IPSModule
                             'width'   => '200px'
                         ],
                         [
-                            'name'    => 'MessageID',
-                            'caption' => 'MessageID',
+                            'name'    => 'ChargePointIdentity',
+                            'caption' => 'Charge Point Identity',
                             'width'   => '200px'
                         ]
 
                     ],
-                    'values' => $availablePoints
+                    'values' => $availableChargePoints
                 ]
             ]
         ]);
