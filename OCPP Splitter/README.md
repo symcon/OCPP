@@ -1,5 +1,5 @@
 # OCPP Splitter
-Beschreibung des Moduls.
+Verteilerinstanz für die Ladepunkte
 
 ### Inhaltsverzeichnis
 
@@ -7,13 +7,10 @@ Beschreibung des Moduls.
 2. [Voraussetzungen](#2-voraussetzungen)
 3. [Software-Installation](#3-software-installation)
 4. [Einrichten der Instanzen in IP-Symcon](#4-einrichten-der-instanzen-in-ip-symcon)
-5. [Statusvariablen und Profile](#5-statusvariablen-und-profile)
-6. [WebFront](#6-webfront)
-7. [PHP-Befehlsreferenz](#7-php-befehlsreferenz)
 
 ### 1. Funktionsumfang
 
-*
+* Verteilt die ankommenden Daten an die Ladepunkte
 
 ### 2. Voraussetzungen
 
@@ -31,37 +28,4 @@ Beschreibung des Moduls.
 
 __Konfigurationsseite__:
 
-Name     | Beschreibung
--------- | ------------------
-         |
-         |
-
-### 5. Statusvariablen und Profile
-
-Die Statusvariablen/Kategorien werden automatisch angelegt. Das Löschen einzelner kann zu Fehlfunktionen führen.
-
-#### Statusvariablen
-
-Name   | Typ     | Beschreibung
------- | ------- | ------------
-       |         |
-       |         |
-
-#### Profile
-
-Name   | Typ
------- | -------
-       |
-       |
-
-### 6. WebFront
-
-Die Funktionalität, die das Modul im WebFront bietet.
-
-### 7. PHP-Befehlsreferenz
-
-`boolean OCPPS_BeispielFunktion(integer $InstanzID);`
-Erklärung der Funktion.
-
-Beispiel:
-`OCPPS_BeispielFunktion(12345);`
+Auf der konfigurationsseite des Splitters können die Informationen zum einrichten eines Ladepunktes entnommen werden.

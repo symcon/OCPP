@@ -1,5 +1,5 @@
 # OCPP Charging Point
-Beschreibung des Moduls.
+Instanz, welches einen Ladepunkt repräsentiert. Zeigt den Verbrauch, sowie ob gerade eine Transaktion läuft, an.
 
 ### Inhaltsverzeichnis
 
@@ -9,11 +9,11 @@ Beschreibung des Moduls.
 4. [Einrichten der Instanzen in IP-Symcon](#4-einrichten-der-instanzen-in-ip-symcon)
 5. [Statusvariablen und Profile](#5-statusvariablen-und-profile)
 6. [WebFront](#6-webfront)
-7. [PHP-Befehlsreferenz](#7-php-befehlsreferenz)
 
 ### 1. Funktionsumfang
 
-*
+* Anzeige des Verbrauchs
+* Anzeige, ob gerade eine Transaktion läuft
 
 ### 2. Voraussetzungen
 
@@ -31,10 +31,9 @@ Beschreibung des Moduls.
 
 __Konfigurationsseite__:
 
-Name     | Beschreibung
--------- | ------------------
-         |
-         |
+Name                  | Beschreibung
+--------------------- | ------------------
+Charge Point Identity | Einzigartiger Identifikator des Ladepunktes 
 
 ### 5. Statusvariablen und Profile
 
@@ -42,26 +41,15 @@ Die Statusvariablen/Kategorien werden automatisch angelegt. Das Löschen einzeln
 
 #### Statusvariablen
 
-Name   | Typ     | Beschreibung
------- | ------- | ------------
-       |         |
-       |         |
-
-#### Profile
-
-Name   | Typ
------- | -------
-       |
-       |
+Name                  | Typ     | Beschreibung
+--------------------- | ------- | ------------
+Hersteller            | string  | Name des Herstellers
+Verbrauchswert        | float   | Anzeige des Verbrauchs des Ladepunktes
+Model                 | string  | Modell des Ladepunktes
+Seriennummer          | string  | Seriennummer des Ladepunktes
+Transaktion ausführen | boolean | Anzeige, ob gerade ein Ladepunkt genutzt wird
 
 ### 6. WebFront
 
 Die Funktionalität, die das Modul im WebFront bietet.
 
-### 7. PHP-Befehlsreferenz
-
-`boolean OCPPD_BeispielFunktion(integer $InstanzID);`
-Erklärung der Funktion.
-
-Beispiel:
-`OCPPD_BeispielFunktion(12345);`

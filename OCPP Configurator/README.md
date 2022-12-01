@@ -7,9 +7,6 @@ Unterstützt den Benutzer beim Einrichten der OCPP-Charging-Point-Instanz
 2. [Voraussetzungen](#2-voraussetzungen)
 3. [Software-Installation](#3-software-installation)
 4. [Einrichten der Instanzen in IP-Symcon](#4-einrichten-der-instanzen-in-ip-symcon)
-5. [Statusvariablen und Profile](#5-statusvariablen-und-profile)
-6. [WebFront](#6-webfront)
-7. [PHP-Befehlsreferenz](#7-php-befehlsreferenz)
 
 ### 1. Funktionsumfang
 
@@ -32,37 +29,9 @@ Unterstützt den Benutzer beim Einrichten der OCPP-Charging-Point-Instanz
 
 __Konfigurationsseite__:
 
-Name     | Beschreibung
--------- | ------------------
-         |
-         |
-
-### 5. Statusvariablen und Profile
-
-Die Statusvariablen/Kategorien werden automatisch angelegt. Das Löschen einzelner kann zu Fehlfunktionen führen.
-
-#### Statusvariablen
-
-Name   | Typ     | Beschreibung
------- | ------- | ------------
-       |         |
-       |         |
-
-#### Profile
-
-Name   | Typ
------- | -------
-       |
-       |
-
-### 6. WebFront
-
-Die Funktionalität, die das Modul im WebFront bietet.
-
-### 7. PHP-Befehlsreferenz
-
-`boolean OCPPK_BeispielFunktion(integer $InstanzID);`
-Erklärung der Funktion.
-
-Beispiel:
-`OCPPK_BeispielFunktion(12345);`
+Name                  | Beschreibung
+--------------------- | ------------------
+Hersteller            | Name des Herstellers
+Modell                | Modell des Ladepunktes
+Seriennummer          | Seriennummer des Ladepunktes
+Charge Point Identity | Einzigartiger Identifikator des Ladepunktes 
