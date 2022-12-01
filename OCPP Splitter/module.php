@@ -93,7 +93,7 @@ include_once __DIR__ . '/../libs/WebHookModule.php';
                 $messageID,
                 [
                     'status'      => 'Accepted',
-                    'currentTime' => date(DateTime::ISO8601),
+                    'currentTime' => date(DateTime::ATOM),
                     'interval'    => 60
                 ]
             ];
