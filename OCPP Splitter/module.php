@@ -61,6 +61,13 @@ include_once __DIR__ . '/../libs/WebHookModule.php';
 
             $chargePointIdentity = str_replace($prefix, '', $_SERVER['REQUEST_URI']);
 
+            // At the moment we do not process any CALLRESULT/CALLERROR messages
+            // Only TriggerMessage results will get them, and we do not process it for now
+            if ($message[0] != CALL) {
+                $this->SendDebug('Skipping', $message, 0);
+                return;
+            }
+            
             //Send it to the children
             $this->SendDataToChildren(json_encode([
                 'DataID'              => '{54E04042-D715-71A0-BA80-ADD8B6CDF151}',

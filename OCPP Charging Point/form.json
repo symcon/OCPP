@@ -6,6 +6,12 @@
             "type": "ValidationTextBox"
         }
     ],
-    "actions": [],
+    "actions": [
+        {
+            "type": "Button",
+            "caption": "Update",
+            "onClick": "OCPP_Update($id);"
+        }
+    ],
     "status": []
 }

@@ -241,4 +241,33 @@ class OCPPChargingPoint extends IPSModule
             ]
         ];
     }
+    
+    private function generateMessageID()
+    {
+        return sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x', mt_rand(0, 65535), mt_rand(0, 65535), mt_rand(0, 65535), mt_rand(16384, 20479), mt_rand(32768, 49151), mt_rand(0, 65535), mt_rand(0, 65535), mt_rand(0, 65535));
+    }
+    
+    private function getTriggerMessageRequest($messageType)
+    {
+        /**
+         * OCPP-1.6 edition 2.pdf
+         * Page 89
+         * TriggerMessage.req
+         */
+        return [
+            CALL,
+            $this->generateMessageID(),
+            "TriggerMessage",
+            [
+                'requestedMessage' => $messageType
+            ]
+        ];
+    }
+    
+    public function Update()
+    {
+        $this->send($this->getTriggerMessageRequest('BootNotification'));
+        $this->send($this->getTriggerMessageRequest('MeterValues'));
+        $this->send($this->getTriggerMessageRequest('StatusNotification'));
+    }
 }
