@@ -11,7 +11,7 @@
         },
         {
             "type": "Label",
-            "caption": "Hostname: One of %s"
+            "caption": "Hostname(s): %s"
         },
         {
             "type": "Label",
