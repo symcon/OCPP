@@ -18,9 +18,6 @@ class OCPPChargingPoint extends IPSModule
         $this->RegisterVariableString('Vendor', $this->Translate('Vendor'));
         $this->RegisterVariableString('Model', $this->Translate('Model'));
         $this->RegisterVariableString('SerialNumber', $this->Translate('SerialNumber'));
-
-        $this->RegisterVariableFloat('MeterValue', $this->Translate('Meter Value'), '~Electricity.Wh');
-        $this->RegisterVariableBoolean('Transaction', $this->Translate('Transaction run'));
     }
 
     public function Destroy()
@@ -50,27 +47,24 @@ class OCPPChargingPoint extends IPSModule
                 $this->SetValue('Vendor', $payload['chargePointVendor']);
                 $this->SetValue('Model', $payload['chargePointModel']);
                 $this->SetValue('SerialNumber', $payload['chargePointSerialNumber']);
-                // No Feedback. Feedback is send by the Splitter
+                // No Feedback. Feedback is sent by the Splitter
                 break;
             case 'MeterValues':
-                $this->setMeterValue($payload);
-                $this->send($this->getMeterValueResponse($messageID));
+                $this->processMeterValue($messageID, $payload);
+                break;
+            case 'StatusNotification':
+                $this->processStatusNotification($messageID, $payload);
                 break;
             case 'StartTransaction':
-                //TODO not fully implemented / check is miss (Accepted or other)
-                $this->SetValue('Transaction', true);
-                $this->send($this->getStartTransactionResponse($messageID));
+                $this->processStartTransaction($messageID, $payload);
                 break;
             case 'StopTransaction':
-                //TODO not fully implemented check if it accepted miss
-                $this->SetValue('Transaction', false);
-                $this->send($this->getStopTransactionResponse($messageID));
+                $this->processStopTransaction($messageID, $payload);
                 break;
             case 'Heartbeat':
                 $this->send($this->getHeartbeatResponse($messageID));
                 break;
             case 'DataTransfer':
-                //TODO not fully implemented
                 $this->send($this->getDataTransferResponse($messageID));
                 break;
             default:
@@ -140,6 +134,20 @@ class OCPPChargingPoint extends IPSModule
         ];
     }
 
+    private function getStatusNotificationResponse(string $messageID)
+    {
+        /**
+         * OCPP-1.6 edition 2.pdf
+         * Page 73
+         * StatusNotification.conf
+         */
+        return  [
+            CALLRESULT,
+            $messageID,
+            []
+        ];
+    }
+    
     private function getHeartbeatResponse(string $messageID)
     {
         /**
@@ -156,25 +164,66 @@ class OCPPChargingPoint extends IPSModule
         ];
     }
 
-    private function setMeterValue($message)
+    private function processMeterValue(string $messageID, $payload)
     {
-        $values = $message['meterValue'];
+        $values = $payload['meterValue'];
 
-        $currentValue = 0;
+        $currentValue = null;
         $currentTime = 0;
         foreach ($values as $value) {
-            //Get the timestamp
-            //Timestamp is in ISO8601
-            $timestamp = $value['timestamp'];
-            $unix = strtotime($timestamp);
-
             //If the timestamp is higher than the previous, save it and the value. We only want the newest one
-            if ($unix > $currentTime) {
-                $currentTime = $unix;
-                $currentValue = array_sum(array_column($value['sampledValue'], 'value'));
+            $newTime = strtotime($value['timestamp']);
+            if ($newTime > $currentTime) {
+                $currentTime = $newTime;
+                $currentValue = $value;
             }
         }
-        $this->SetValue('MeterValue', $currentValue);
+        
+        foreach ($currentValue['sampledValue'] as $sampledValue) {
+            $suffix_ident = "";
+            $suffix_name = "";
+            if (isset($sampledValue['measurand'])) {
+                $suffix_ident = str_replace('.', '_', $sampledValue['measurand']);
+                $suffix_name = ", " . $sampledValue['measurand'];
+            }
+            
+            $ident = sprintf('MeterValue_%d%s', $payload['connectorId'], $suffix_ident);
+            $this->RegisterVariableFloat($ident, sprintf($this->Translate('Meter Value (Connector %d)%s'), $payload['connectorId'], $suffix_name), '~Electricity.Wh');
+            $this->SetValue($ident, $sampledValue['value']);
+        }
+        
+        $this->send($this->getMeterValueResponse($messageID));
+    }
+
+    private function processStatusNotification(string $messageID, $payload)
+    {
+        $ident = sprintf('Status_%d', $payload['connectorId']);
+        $this->RegisterVariableString($ident, sprintf($this->Translate('Status (Connector %d)'), $payload['connectorId']));
+        $this->SetValue($ident, $payload['status']);
+
+        $ident = sprintf('ErrorCode_%d', $payload['connectorId']);
+        $this->RegisterVariableString($ident, sprintf($this->Translate('ErrorCode (Connector %d)'), $payload['connectorId']));
+        $this->SetValue($ident, $payload['errorCode']);
+        
+        $this->send($this->getStatusNotificationResponse($messageID));
+    }
+    
+    private function processStartTransaction(string $messageID, $payload)
+    {
+        $ident = sprintf('Transaction_%d', $payload['connectorId']);
+        $this->RegisterVariableBoolean($ident, sprintf($this->Translate('Transaction (Connector %d)'), $payload['connectorId']));
+        $this->SetValue($ident, true);
+        
+        $this->send($this->getStartTransactionResponse($messageID));
+    }
+
+    private function processStopTransaction(string $messageID, $payload)
+    {
+        $ident = sprintf('Transaction_%d', $payload['connectorId']);
+        $this->RegisterVariableBoolean($ident, sprintf($this->Translate('Transaction (Connector %d)'), $payload['connectorId']));
+        $this->SetValue($ident, false);
+        
+        $this->send($this->getStopTransactionResponse($messageID));
     }
 
     private function getDataTransferResponse(string $messageID)
