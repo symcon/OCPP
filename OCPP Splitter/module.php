@@ -52,7 +52,14 @@ include_once __DIR__ . '/../libs/WebHookModule.php';
             $this->SendDebug('Receive', $message, 0);
             $message = json_decode($message);
 
-            $chargePointIdentity = str_replace('/hook/ocpp/' . $this->InstanceID . '/', '', $_SERVER['REQUEST_URI']);
+            $prefix = '/hook/ocpp/' . $this->InstanceID . '/';
+
+            if (strpos($_SERVER['REQUEST_URI'], $prefix) === false) {
+                $this->SendDebug('Invalid', 'Hook is missing Charge Point Indentity', 0);
+                return;
+            }
+
+            $chargePointIdentity = str_replace($prefix, '', $_SERVER['REQUEST_URI']);
 
             //Send it to the children
             $this->SendDataToChildren(json_encode([

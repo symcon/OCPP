@@ -39,12 +39,12 @@ class OCPPChargingPoint extends IPSModule
 
     public function ReceiveData($JSONString)
     {
-        $data = json_decode($JSONString, true);
-        $this->SendDebug('Received', json_encode($data['Message']), 0);
-        $messageID = $this->ReadPropertyString('MessageID');
-        $messageType = $data['Message'][2];
-        $payload = $data['Message'][3];
-        //$this->SendDebug('messageType', $messageType, 0);
+        $message = json_decode($JSONString, true);
+        $this->SendDebug('Received', json_encode($message['Message']), 0);
+        $messageID = $message['Message'][1];
+        $messageType = $message['Message'][2];
+        $payload = $message['Message'][3];
+
         switch ($messageType) {
             case 'BootNotification':
                 $this->SetValue('Vendor', $payload['chargePointVendor']);
@@ -54,33 +54,38 @@ class OCPPChargingPoint extends IPSModule
                 break;
             case 'MeterValues':
                 $this->setMeterValue($payload);
-                $message = $this->getMeterValueResponse($messageID);
+                $this->send($this->getMeterValueResponse($messageID));
                 break;
             case 'StartTransaction':
                 //TODO not fully implemented / check is miss (Accepted or other)
-                $message = $this->getStartTransactionResponse($messageID);
                 $this->SetValue('Transaction', true);
+                $this->send($this->getStartTransactionResponse($messageID));
                 break;
             case 'StopTransaction':
                 //TODO not fully implemented check if it accepted miss
-                $message = $this->getStopTransactionResponse($messageID);
                 $this->SetValue('Transaction', false);
+                $this->send($this->getStopTransactionResponse($messageID));
                 break;
             case 'Heartbeat':
-                $message = $this->getHeartbeatResponse($messageID);
+                $this->send($this->getHeartbeatResponse($messageID));
+                break;
+            case 'DataTransfer':
+                //TODO not fully implemented
+                $this->send($this->getDataTransferResponse($messageID));
                 break;
             default:
                 break;
         }
+    }
 
-        if (isset($message)) {
-            $this->SendDebug('Transmitted', json_encode($message), 0);
-            $this->SendDataToParent(json_encode([
-                'DataID'              => '{8B051B38-91B7-97B3-2F99-BCB86C0925FA}',
-                'ChargePointIdentity' => $this->ReadPropertyString('ChargePointIdentity'),
-                'Message'             => $message
-            ]));
-        }
+    private function send($message)
+    {
+        $this->SendDebug('Transmitted', json_encode($message), 0);
+        $this->SendDataToParent(json_encode([
+            'DataID'              => '{8B051B38-91B7-97B3-2F99-BCB86C0925FA}',
+            'ChargePointIdentity' => $this->ReadPropertyString('ChargePointIdentity'),
+            'Message'             => $message
+        ]));
     }
 
     private function getStopTransactionResponse(string $messageID)
@@ -146,7 +151,7 @@ class OCPPChargingPoint extends IPSModule
             CALLRESULT,
             $messageID,
             [
-                'currentTime' => date(DateTime::ISO8601)
+                'currentTime' => date(DateTime::ATOM)
             ]
         ];
     }
@@ -170,5 +175,21 @@ class OCPPChargingPoint extends IPSModule
             }
         }
         $this->SetValue('MeterValue', $currentValue);
+    }
+
+    private function getDataTransferResponse(string $messageID)
+    {
+        /**
+         * OCPP-1.6 edition 2.pdf
+         * Page 64
+         * DataTransfer.conf
+         */
+        return [
+            CALLRESULT,
+            $messageID,
+            [
+                'status' => 'Accepted'
+            ]
+        ];
     }
 }
