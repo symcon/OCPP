@@ -3,7 +3,9 @@
         "de": {
             "Vendor": "Hersteller",
             "Serial Number": "Seriennummer",
-            "MessageID": "NachrichtenID"
+            "MessageID": "NachrichtenID",
+            "MeterValue": "Zählerstand",
+            "Transaction run": "Transaktion ausführen"
         }
     }
 }

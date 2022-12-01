@@ -1,7 +1,11 @@
 {
     "translations": {
         "de": {
-            "Address": "Adresse"
+            "Address": "Adresse",
+            "Please use these settings for your OCPP configuration": "Bitte diese Einstellungen für Ihre OCPP Konfiguration nutzen",
+            "Communication Type: OCPP 1.6 JSON": "Kommunikationstyp: OCPP 1.6 JSON",
+            "Hostname(s): %s": "Hostname(s): %s",
+            "System Path: %s": "Systempfad: %s"
         }
     }
 }
