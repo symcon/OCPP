@@ -79,7 +79,13 @@ class OCPPConfigurator extends IPSModule
                     'Model'                  => GetValue(IPS_GetObjectIDByIdent('Model', $instanceID)),
                     'SerialNumber'           => GetValue(IPS_GetObjectIDByIdent('SerialNumber', $instanceID)),
                     'ChargePointIdentity'    => IPS_GetProperty($instanceID, 'ChargePointIdentity'),
-                    'InstanceID'             => $instanceID,
+                    'instanceID'             => $instanceID,
+                    'create'              => [
+                        'moduleID'      => '{2EDDBD05-F295-3A79-00BD-B2FC0F107134}',
+                        'configuration' => [
+                            'ChargePointIdentity' => IPS_GetProperty($instanceID, 'ChargePointIdentity'),
+                        ]
+                    ],
                 ];
             }
         }
