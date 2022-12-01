@@ -4,7 +4,8 @@
             "Charging Points": "Ladestationen",
             "Vendor": "Hersteller",
             "Serial Number": "Seriennummer",
-            "MessageID": "Nachrichten ID"
+            "Model": "Modell",
+            "Charge Point Identity": "Ladestationsidentifikator"
         }
     }
 }

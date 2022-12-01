@@ -2,10 +2,14 @@
     "translations": {
         "de": {
             "Vendor": "Hersteller",
+            "Model": "Modell",
             "Serial Number": "Seriennummer",
-            "MessageID": "NachrichtenID",
-            "MeterValue": "Zählerstand",
-            "Transaction run": "Transaktion ausführen"
+            "Charge Point Identity": "Ladestationsidentifikator",
+            "Update": "Aktualisieren",
+            "Meter Value (Connector %d)%s": "Zählerstand (Anschluss %d)%s",
+            "Status (Connector %d)": "Status (Anschluss %d)",
+            "ErrorCode (Connector %d)": "Fehlercode (Anschluss %d)",
+            "Transaction (Connector %d)": "Transaktion (Anschluss %d)"
         }
     }
 }

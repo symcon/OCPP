@@ -17,7 +17,7 @@ class OCPPChargingPoint extends IPSModule
         //Variables
         $this->RegisterVariableString('Vendor', $this->Translate('Vendor'), '', 1);
         $this->RegisterVariableString('Model', $this->Translate('Model'), '', 2);
-        $this->RegisterVariableString('SerialNumber', $this->Translate('SerialNumber'), '', 3);
+        $this->RegisterVariableString('SerialNumber', $this->Translate('Serial Number'), '', 3);
     }
 
     public function Destroy()
