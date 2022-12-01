@@ -15,9 +15,9 @@ class OCPPChargingPoint extends IPSModule
         $this->RegisterPropertyString('ChargePointIdentity', '');
 
         //Variables
-        $this->RegisterVariableString('Vendor', $this->Translate('Vendor'));
-        $this->RegisterVariableString('Model', $this->Translate('Model'));
-        $this->RegisterVariableString('SerialNumber', $this->Translate('SerialNumber'));
+        $this->RegisterVariableString('Vendor', $this->Translate('Vendor'), '', 1);
+        $this->RegisterVariableString('Model', $this->Translate('Model'), '', 2);
+        $this->RegisterVariableString('SerialNumber', $this->Translate('SerialNumber'), '', 3);
     }
 
     public function Destroy()
@@ -188,7 +188,7 @@ class OCPPChargingPoint extends IPSModule
             }
             
             $ident = sprintf('MeterValue_%d%s', $payload['connectorId'], $suffix_ident);
-            $this->RegisterVariableFloat($ident, sprintf($this->Translate('Meter Value (Connector %d)%s'), $payload['connectorId'], $suffix_name), '~Electricity.Wh');
+            $this->RegisterVariableFloat($ident, sprintf($this->Translate('Meter Value (Connector %d)%s'), $payload['connectorId'], $suffix_name), '~Electricity.Wh', ($payload['connectorId']+1) * 100 + 10);
             $this->SetValue($ident, $sampledValue['value']);
         }
         
@@ -198,11 +198,11 @@ class OCPPChargingPoint extends IPSModule
     private function processStatusNotification(string $messageID, $payload)
     {
         $ident = sprintf('Status_%d', $payload['connectorId']);
-        $this->RegisterVariableString($ident, sprintf($this->Translate('Status (Connector %d)'), $payload['connectorId']));
+        $this->RegisterVariableString($ident, sprintf($this->Translate('Status (Connector %d)'), $payload['connectorId']), '', ($payload['connectorId']+1) * 100 + 1);
         $this->SetValue($ident, $payload['status']);
 
         $ident = sprintf('ErrorCode_%d', $payload['connectorId']);
-        $this->RegisterVariableString($ident, sprintf($this->Translate('ErrorCode (Connector %d)'), $payload['connectorId']));
+        $this->RegisterVariableString($ident, sprintf($this->Translate('ErrorCode (Connector %d)'), $payload['connectorId']), '', ($payload['connectorId']+1) * 100 + 2);
         $this->SetValue($ident, $payload['errorCode']);
         
         $this->send($this->getStatusNotificationResponse($messageID));
@@ -211,7 +211,7 @@ class OCPPChargingPoint extends IPSModule
     private function processStartTransaction(string $messageID, $payload)
     {
         $ident = sprintf('Transaction_%d', $payload['connectorId']);
-        $this->RegisterVariableBoolean($ident, sprintf($this->Translate('Transaction (Connector %d)'), $payload['connectorId']));
+        $this->RegisterVariableBoolean($ident, sprintf($this->Translate('Transaction (Connector %d)'), $payload['connectorId']), '', ($payload['connectorId']+1) * 100);
         $this->SetValue($ident, true);
         
         $this->send($this->getStartTransactionResponse($messageID));
@@ -220,7 +220,7 @@ class OCPPChargingPoint extends IPSModule
     private function processStopTransaction(string $messageID, $payload)
     {
         $ident = sprintf('Transaction_%d', $payload['connectorId']);
-        $this->RegisterVariableBoolean($ident, sprintf($this->Translate('Transaction (Connector %d)'), $payload['connectorId']));
+        $this->RegisterVariableBoolean($ident, sprintf($this->Translate('Transaction (Connector %d)'), $payload['connectorId']), '', ($payload['connectorId']+1) * 10);
         $this->SetValue($ident, false);
         
         $this->send($this->getStopTransactionResponse($messageID));
