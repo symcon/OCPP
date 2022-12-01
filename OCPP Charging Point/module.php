@@ -18,8 +18,8 @@ class OCPPChargingPoint extends IPSModule
         $this->RegisterPropertyString('MessageID', '');
 
         //Variables
-        $this->RegisterVariableFloat('meterValue', $this->Translate('Meter Value'), '~Electricity.Wh');
-        $this->RegisterVariableBoolean('transaction', $this->Translate('Transaction run'));
+        $this->RegisterVariableFloat('MeterValue', $this->Translate('Meter Value'), '~Electricity.Wh');
+        $this->RegisterVariableBoolean('Transaction', $this->Translate('Transaction run'));
     }
 
     public function Destroy()
@@ -52,12 +52,12 @@ class OCPPChargingPoint extends IPSModule
             case 'StartTransaction':
                 //TODO not fully implemented / check is miss (Accepted or other)
                 $buffer = $this->getStartTransactionResponse($messageID);
-                $this->SetValue('transaction', true);
+                $this->SetValue('Transaction', true);
                 break;
             case 'StopTransaction':
                 //TODO not fully implemented check if it accepted miss
                 $buffer = $this->getStopTransactionResponse($messageID);
-                $this->SetValue('transaction', false);
+                $this->SetValue('Transaction', false);
                 break;
             case 'Heartbeat':
                 $buffer = $this->getHeartbeatResponse($messageID);
@@ -158,6 +158,6 @@ class OCPPChargingPoint extends IPSModule
                 $currentValue = array_sum(array_column($value['sampledValue'], 'value'));
             }
         }
-        $this->SetValue('meterValue', $currentValue);
+        $this->SetValue('MeterValue', $currentValue);
     }
 }
