@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-define('CALLRESULT', 3);
+include __DIR__ . '/../libs/OCPPConstants.php';
 
 class OCPPChargingPoint extends IPSModule
 {

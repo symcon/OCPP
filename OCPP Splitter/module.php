@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-define('CALLRESULT', 3); //OCPP-j-1.6-specification.pdf Page 12
+include __DIR__ . '/../libs/OCPPConstants.php';
 
 include_once __DIR__ . '/../libs/WebHookModule.php';
 
