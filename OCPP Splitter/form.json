@@ -1,11 +1,25 @@
 {
-    "elements": [
+    "actions": [
         {
-            "type": "ValidationTextBox",
-            "name": "Address",
-            "caption": "Websocket-Address"
+            "type": "Label",
+            "caption": "Please use these settings for your OCPP configuration",
+            "italic": true
+        },
+        {
+            "type": "Label",
+            "caption": "Communication Type: OCPP 1.6 JSON"
+        },
+        {
+            "type": "Label",
+            "caption": "Hostname: One of %s"
+        },
+        {
+            "type": "Label",
+            "caption": "Port: 3777"
+        },
+        {
+            "type": "Label",
+            "caption": "System Path: %s"
         }
-    ],
-    "actions": [],
-    "status": []
+    ]
 }
