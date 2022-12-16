@@ -80,14 +80,14 @@ class OCPPChargingPoint extends IPSModule
         $this->send($this->getTriggerMessageRequest('StatusNotification'));
     }
 
-    public function RemoteStartTransaction($ConnectorId)
+    public function RemoteStartTransaction(int $ConnectorId)
     {
-        $this->send($this->getStartTransactionResponse($ConnectorId, 'symcon'));
+        $this->send($this->getRemoteStartTransactionRequest($ConnectorId, 'symcon'));
     }
 
-    public function RemoteStopTransaction($TransactionId)
+    public function RemoteStopTransaction(int $TransactionId)
     {
-        $this->send($this->getStopTransactionResponse($TransactionId));
+        $this->send($this->getRemoteStopTransactionRequest($TransactionId));
     }
 
     private function send($message)
@@ -284,7 +284,7 @@ class OCPPChargingPoint extends IPSModule
         return sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x', mt_rand(0, 65535), mt_rand(0, 65535), mt_rand(0, 65535), mt_rand(16384, 20479), mt_rand(32768, 49151), mt_rand(0, 65535), mt_rand(0, 65535), mt_rand(0, 65535));
     }
 
-    private function getTriggerMessageRequest($messageType)
+    private function getTriggerMessageRequest(string $messageType)
     {
         /**
          * OCPP-1.6 edition 2.pdf
@@ -301,7 +301,7 @@ class OCPPChargingPoint extends IPSModule
         ];
     }
 
-    private function getRemoteStartTransactionRequest($connectorId, $idTag /* unsupported for now: $chargingProfile */)
+    private function getRemoteStartTransactionRequest(int $connectorId, string $idTag /* unsupported for now: array $chargingProfile */)
     {
         /**
          * OCPP-1.6 edition 2.pdf
@@ -319,7 +319,7 @@ class OCPPChargingPoint extends IPSModule
         ];
     }
 
-    private function getRemoteStopTransactionRequest($transactionId)
+    private function getRemoteStopTransactionRequest(int $transactionId)
     {
         /**
          * OCPP-1.6 edition 2.pdf
