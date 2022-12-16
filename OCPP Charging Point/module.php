@@ -118,7 +118,7 @@ class OCPPChargingPoint extends IPSModule
         ];
     }
 
-    private function getStartTransactionResponse(string $messageID)
+    private function getStartTransactionResponse(string $messageID, int $transactionId)
     {
         /**
          * OCPP-1.6 edition 2.pdf
@@ -133,7 +133,7 @@ class OCPPChargingPoint extends IPSModule
                 'idTagInfo' => [
                     'status' => 'Accepted'
                 ],
-                'transactionId' => rand(1, 5000)
+                'transactionId' => $transactionId
             ]
         ];
     }
@@ -237,12 +237,14 @@ class OCPPChargingPoint extends IPSModule
     {
         $ident = sprintf('Transaction_%d', $payload['connectorId']);
         $this->RegisterVariableBoolean($ident, sprintf($this->Translate('Transaction (Connector %d)'), $payload['connectorId']), '', ($payload['connectorId'] + 1) * 100 + 3);
+        $this->SetValue($ident, true);
 
+        $transactionId = this->generateTransactionID();
         $ident = sprintf('TransactionID_%d', $payload['connectorId']);
         $this->RegisterVariableInteger($ident, sprintf($this->Translate('TransactionID (Connector %d)'), $payload['connectorId']), '', ($payload['connectorId'] + 1) * 100 + 4);
-        $this->SetValue($ident, $payload['transactionId']);
+        $this->SetValue($ident, $transactionId);
 
-        $this->send($this->getStartTransactionResponse($messageID));
+        $this->send($this->getStartTransactionResponse($messageID, $transactionId));
     }
 
     private function processStopTransaction(string $messageID, $payload)
@@ -282,6 +284,11 @@ class OCPPChargingPoint extends IPSModule
     private function generateMessageID()
     {
         return sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x', mt_rand(0, 65535), mt_rand(0, 65535), mt_rand(0, 65535), mt_rand(16384, 20479), mt_rand(32768, 49151), mt_rand(0, 65535), mt_rand(0, 65535), mt_rand(0, 65535));
+    }
+
+    private function generateTransactionID()
+    {
+        return rand(1, 5000);
     }
 
     private function getTriggerMessageRequest(string $messageType)
