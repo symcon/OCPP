@@ -9,7 +9,9 @@
             "Meter Value (Connector %d)%s": "Zählerstand (Anschluss %d)%s",
             "Status (Connector %d)": "Status (Anschluss %d)",
             "ErrorCode (Connector %d)": "Fehlercode (Anschluss %d)",
-            "Transaction (Connector %d)": "Transaktion (Anschluss %d)"
+            "Transaction (Connector %d)": "Transaktion (Anschluss %d)",
+            "Some Wallboxes might keep stuck at 'Preparing' until a transaction is triggered": "Einige Wallboxen bleiben im Zustand 'Preparing' bis eine Transaktion manuell gestartet wird",
+            "Auto Start Transaction": "Transaktion automatisch starten"
         }
     }
 }

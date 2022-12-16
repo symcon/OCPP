@@ -4,6 +4,15 @@
             "caption": "Charge Point Identity",
             "name": "ChargePointIdentity",
             "type": "ValidationTextBox"
+        },
+        {
+            "type": "Label",
+            "caption": "Some Wallboxes might keep stuck at 'Preparing' until a transaction is triggered"
+        },
+        {
+            "caption": "Auto Start Transaction",
+            "name": "AutoStartTransaction",
+            "type": "CheckBox"
         }
     ],
     "actions": [

@@ -2,8 +2,7 @@
 
 declare(strict_types=1);
 
-include __DIR__ . '/../libs/OCPPConstants.php';
-
+include_once __DIR__ . '/../libs/OCPPConstants.php';
 include_once __DIR__ . '/../libs/WebHookModule.php';
 
     class OCPPSplitter extends WebHookModule
@@ -64,10 +63,10 @@ include_once __DIR__ . '/../libs/WebHookModule.php';
             // At the moment we do not process any CALLRESULT/CALLERROR messages
             // Only TriggerMessage results will get them, and we do not process it for now
             if ($message[0] != CALL) {
-                $this->SendDebug('Skipping', $message, 0);
+                $this->SendDebug('Skipping', print_r($message, true), 0);
                 return;
             }
-            
+
             //Send it to the children
             $this->SendDataToChildren(json_encode([
                 'DataID'              => '{54E04042-D715-71A0-BA80-ADD8B6CDF151}',

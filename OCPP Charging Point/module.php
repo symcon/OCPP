@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-include __DIR__ . '/../libs/OCPPConstants.php';
+include_once __DIR__ . '/../libs/OCPPConstants.php';
 
 class OCPPChargingPoint extends IPSModule
 {
@@ -13,6 +13,7 @@ class OCPPChargingPoint extends IPSModule
 
         //Properties
         $this->RegisterPropertyString('ChargePointIdentity', '');
+        $this->RegisterPropertyBoolean('AutoStartTransaction', false);
 
         //Variables
         $this->RegisterVariableString('Vendor', $this->Translate('Vendor'), '', 1);
@@ -72,6 +73,23 @@ class OCPPChargingPoint extends IPSModule
         }
     }
 
+    public function Update()
+    {
+        $this->send($this->getTriggerMessageRequest('BootNotification'));
+        $this->send($this->getTriggerMessageRequest('MeterValues'));
+        $this->send($this->getTriggerMessageRequest('StatusNotification'));
+    }
+
+    public function RemoteStartTransaction($ConnectorId)
+    {
+        $this->send($this->getStartTransactionResponse($ConnectorId, 'symcon'));
+    }
+
+    public function RemoteStopTransaction($TransactionId)
+    {
+        $this->send($this->getStopTransactionResponse($TransactionId));
+    }
+
     private function send($message)
     {
         $this->SendDebug('Transmitted', json_encode($message), 0);
@@ -115,7 +133,7 @@ class OCPPChargingPoint extends IPSModule
                 'idTagInfo' => [
                     'status' => 'Accepted'
                 ],
-                'transactionId' => 50
+                'transactionId' => rand(1, 5000)
             ]
         ];
     }
@@ -147,7 +165,7 @@ class OCPPChargingPoint extends IPSModule
             []
         ];
     }
-    
+
     private function getHeartbeatResponse(string $messageID)
     {
         /**
@@ -178,51 +196,70 @@ class OCPPChargingPoint extends IPSModule
                 $currentValue = $value;
             }
         }
-        
+
         foreach ($currentValue['sampledValue'] as $sampledValue) {
-            $suffix_ident = "";
-            $suffix_name = "";
+            $suffix_ident = '';
+            $suffix_name = '';
             if (isset($sampledValue['measurand'])) {
                 $suffix_ident = str_replace('.', '_', $sampledValue['measurand']);
-                $suffix_name = ", " . $sampledValue['measurand'];
+                $suffix_name = ', ' . $sampledValue['measurand'];
             }
-            
+
             $ident = sprintf('MeterValue_%d%s', $payload['connectorId'], $suffix_ident);
-            $this->RegisterVariableFloat($ident, sprintf($this->Translate('Meter Value (Connector %d)%s'), $payload['connectorId'], $suffix_name), '~Electricity.Wh', ($payload['connectorId']+1) * 100 + 10);
+            $this->RegisterVariableFloat($ident, sprintf($this->Translate('Meter Value (Connector %d)%s'), $payload['connectorId'], $suffix_name), '~Electricity.Wh', ($payload['connectorId'] + 1) * 100 + 10);
             $this->SetValue($ident, $sampledValue['value']);
         }
-        
+
         $this->send($this->getMeterValueResponse($messageID));
     }
 
     private function processStatusNotification(string $messageID, $payload)
     {
         $ident = sprintf('Status_%d', $payload['connectorId']);
-        $this->RegisterVariableString($ident, sprintf($this->Translate('Status (Connector %d)'), $payload['connectorId']), '', ($payload['connectorId']+1) * 100 + 1);
+        $this->RegisterVariableString($ident, sprintf($this->Translate('Status (Connector %d)'), $payload['connectorId']), '', ($payload['connectorId'] + 1) * 100 + 1);
         $this->SetValue($ident, $payload['status']);
 
         $ident = sprintf('ErrorCode_%d', $payload['connectorId']);
-        $this->RegisterVariableString($ident, sprintf($this->Translate('ErrorCode (Connector %d)'), $payload['connectorId']), '', ($payload['connectorId']+1) * 100 + 2);
+        $this->RegisterVariableString($ident, sprintf($this->Translate('ErrorCode (Connector %d)'), $payload['connectorId']), '', ($payload['connectorId'] + 1) * 100 + 2);
         $this->SetValue($ident, $payload['errorCode']);
-        
+
         $this->send($this->getStatusNotificationResponse($messageID));
+
+        // Take care of the 'Preparing' status which might want to trigger us the RemoteStartTransaction
+        if ($payload['status'] === 'Preparing') {
+            if ($this->ReadPropertyBoolean('AutoStartTransaction')) {
+                $this->RemoteStartTransaction($payload['connectorId']);
+            }
+        }
     }
-    
+
     private function processStartTransaction(string $messageID, $payload)
     {
         $ident = sprintf('Transaction_%d', $payload['connectorId']);
-        $this->RegisterVariableBoolean($ident, sprintf($this->Translate('Transaction (Connector %d)'), $payload['connectorId']), '', ($payload['connectorId']+1) * 100);
-        $this->SetValue($ident, true);
-        
+        $this->RegisterVariableBoolean($ident, sprintf($this->Translate('Transaction (Connector %d)'), $payload['connectorId']), '', ($payload['connectorId'] + 1) * 100 + 3);
+
+        $ident = sprintf('TransactionID_%d', $payload['connectorId']);
+        $this->RegisterVariableInteger($ident, sprintf($this->Translate('TransactionID (Connector %d)'), $payload['connectorId']), '', ($payload['connectorId'] + 1) * 100 + 4);
+        $this->SetValue($ident, $payload['transactionId']);
+
         $this->send($this->getStartTransactionResponse($messageID));
     }
 
     private function processStopTransaction(string $messageID, $payload)
     {
-        $ident = sprintf('Transaction_%d', $payload['connectorId']);
-        $this->RegisterVariableBoolean($ident, sprintf($this->Translate('Transaction (Connector %d)'), $payload['connectorId']), '', ($payload['connectorId']+1) * 10);
-        $this->SetValue($ident, false);
-        
+        // Stop Transaction does not transmit the connectorId. We need to search it by the TransactionID.
+        foreach (IPS_GetChildrenIDs($this->InstanceID) as $id) {
+            if (IPS_VariableExists($id)) {
+                $o = IPS_GetObject($id);
+                if (substr($o['ObjectIdent'], 0, 13) == 'TransactionID') {
+                    if (GetValue($id) == $payload['transactionId']) {
+                        $this->SetValue($o['ObjectIdent'], 0);
+                        $this->SetValue(str_replace('TransactionID', 'Transaction', $o['ObjectIdent']), false);
+                    }
+                }
+            }
+        }
+
         $this->send($this->getStopTransactionResponse($messageID));
     }
 
@@ -241,12 +278,12 @@ class OCPPChargingPoint extends IPSModule
             ]
         ];
     }
-    
+
     private function generateMessageID()
     {
         return sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x', mt_rand(0, 65535), mt_rand(0, 65535), mt_rand(0, 65535), mt_rand(16384, 20479), mt_rand(32768, 49151), mt_rand(0, 65535), mt_rand(0, 65535), mt_rand(0, 65535));
     }
-    
+
     private function getTriggerMessageRequest($messageType)
     {
         /**
@@ -257,17 +294,45 @@ class OCPPChargingPoint extends IPSModule
         return [
             CALL,
             $this->generateMessageID(),
-            "TriggerMessage",
+            'TriggerMessage',
             [
                 'requestedMessage' => $messageType
             ]
         ];
     }
-    
-    public function Update()
+
+    private function getRemoteStartTransactionRequest($connectorId, $idTag /* unsupported for now: $chargingProfile */)
     {
-        $this->send($this->getTriggerMessageRequest('BootNotification'));
-        $this->send($this->getTriggerMessageRequest('MeterValues'));
-        $this->send($this->getTriggerMessageRequest('StatusNotification'));
+        /**
+         * OCPP-1.6 edition 2.pdf
+         * Page 80
+         * RemoteStartTransaction.req
+         */
+        return [
+            CALL,
+            $this->generateMessageID(),
+            'RemoteStartTransaction',
+            [
+                'connectorId' => $connectorId,
+                'idTag'       => $idTag
+            ]
+        ];
+    }
+
+    private function getRemoteStopTransactionRequest($transactionId)
+    {
+        /**
+         * OCPP-1.6 edition 2.pdf
+         * Page 81
+         * RemoteStopTransaction.req
+         */
+        return [
+            CALL,
+            $this->generateMessageID(),
+            'RemoteStopTransaction',
+            [
+                'transactionId' => $transactionId
+            ]
+        ];
     }
 }
