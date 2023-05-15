@@ -53,3 +53,20 @@ Transaktion ausführen | boolean | Anzeige, ob gerade ein Ladepunkt genutzt wird
 
 Die Funktionalität, die das Modul im WebFront bietet.
 
+### 7. PHP-Befehlsreferenz
+
+`void OCPP_RemoteStartTransaction(integer $InstanzID, integer $ConnectorId);`
+
+Wenn der Status auf 'Preparing' steht, kann durch diesen Befehl das Laden freigeschaltet werden.
+
+Beispiel:
+`OCPP_RemoteStartTransaction(12345, 1);`
+
+`void OCPP_RemoteStopTransaction(integer $InstanzID, integer $TransactionId);`
+
+Wenn der Zustand auf 'Charging' steht, kann durch diesen Befehl das Laden beendet werden.
+Dazu muss jedoch nicht die ConnectorId, sondern die TransactionId, welche in der passenden Variable steht, übergeben werden!
+
+Beispiel:
+`OCPP_RemoteStopTransaction(12345, 4479);`
+
