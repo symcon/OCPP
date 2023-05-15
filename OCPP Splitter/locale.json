@@ -4,8 +4,12 @@
             "Address": "Adresse",
             "Please use these settings for your OCPP configuration": "Bitte diese Einstellungen für Ihre OCPP Konfiguration nutzen",
             "Communication Type: OCPP 1.6 JSON": "Kommunikationstyp: OCPP 1.6 JSON",
+            "Protocol: WebSocket (ws)": "Protokoll: WebSocket (ws)",
             "Hostname(s): %s": "Hostname(n): %s",
-            "System Path: %s": "Systempfad: %s"
+            "System Path: %s": "Systempfad: %s",
+            "Alternative 1: Systems requiring the full URL with separate endpoint": "Alternative 1: Systeme, welche die vollständige URL benötigen - jedoch den Endpunkt separat konfigurieren",
+            "Alternative 2: Systems requiring the full URL including endpoint": "Alternative 2: Systeme, welche die vollständige URL benötigen inklusive einer Endpunktdefinition",
+            "ws://%s/hook/ocpp/%d/myEndpointName": "ws://%s/hook/ocpp/%d/meinEndpunktName"
         }
     }
 }

@@ -40,8 +40,10 @@ include_once __DIR__ . '/../libs/WebHookModule.php';
                 $ipList[] = $interface['IP'];
             }
 
-            $form['actions'][2]['caption'] = sprintf($this->Translate($form['actions'][2]['caption']), implode(', ', $ipList));
-            $form['actions'][4]['caption'] = sprintf($this->Translate($form['actions'][4]['caption']), 'hook/ocpp/' . $this->InstanceID);
+            $form['actions'][3]['caption'] = sprintf($this->Translate($form['actions'][3]['caption']), implode(', ', $ipList));
+            $form['actions'][5]['caption'] = sprintf($this->Translate($form['actions'][5]['caption']), $this->InstanceID);
+            $form['actions'][7]['value'] = sprintf($this->Translate($form['actions'][7]['value']), implode('|', $ipList), $this->InstanceID);
+            $form['actions'][8]['value'] = sprintf($this->Translate($form['actions'][8]['value']), implode('|', $ipList), $this->InstanceID);
             return json_encode($form);
         }
 
