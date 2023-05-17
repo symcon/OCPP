@@ -28,4 +28,5 @@ Verteilerinstanz für die Ladepunkte
 
 __Konfigurationsseite__:
 
-Auf der konfigurationsseite des Splitters können die Informationen zum einrichten eines Ladepunktes entnommen werden.
+Auf der konfigurationsseite des Splitters können die Informationen zum Einrichten eines Ladepunktes entnommen werden.
+Je nach Wallbox müssen die Parameter einzeln oder als komplette URL angegeben werden.

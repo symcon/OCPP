@@ -35,6 +35,9 @@ Name                  | Beschreibung
 --------------------- | ------------------
 Charge Point Identity | Einzigartiger Identifikator des Ladepunktes 
 
+__Hinweise__
+* Bei der Pulsar Plus müssen alle Zeitpläne vor der Aktivierung von OCPP entfernt werden. Die Ansteuerung über OCPP kann die konfigurierten Zeitpläne nicht überschreiben, da diese immer Vorrang haben.
+
 ### 5. Statusvariablen und Profile
 
 Die Statusvariablen/Kategorien werden automatisch angelegt. Das Löschen einzelner kann zu Fehlfunktionen führen.
@@ -57,10 +60,18 @@ Die Funktionalität, die das Modul im WebFront bietet.
 
 `void OCPP_RemoteStartTransaction(integer $InstanzID, integer $ConnectorId);`
 
-Wenn der Status auf 'Preparing' steht, kann durch diesen Befehl das Laden freigeschaltet werden.
+Wenn der Status auf 'Preparing' or 'Finishing' steht, kann durch diesen Befehl das Laden freigeschaltet werden.
 
 Beispiel:
 `OCPP_RemoteStartTransaction(12345, 1);`
+
+`void OCPP_RemoteStopCurrentTransaction(integer $InstanzID, integer $ConnectorId);`
+
+Wenn der Zustand auf 'Charging' steht, kann durch diesen Befehl das Laden beendet werden.
+Es wird dabei die aktuelle TransactionId genommen, welche in der passenden Variable zur ConnectorId steht!
+
+Beispiel:
+`OCPP_RemoteStopCurrentTransaction(12345, 1);`
 
 `void OCPP_RemoteStopTransaction(integer $InstanzID, integer $TransactionId);`
 
