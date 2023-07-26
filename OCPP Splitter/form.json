@@ -32,13 +32,13 @@
         {
             "type": "ValidationTextBox",
             "caption": "Alternative 1: Systems requiring the full URL with separate endpoint",
-            "value": "ws://%s/hook/ocpp/%d",
+            "value": "ws://%s:3777/hook/ocpp/%d",
             "width": "600px"
         },
         {
             "type": "ValidationTextBox",
             "caption": "Alternative 2: Systems requiring the full URL including endpoint",
-            "value": "ws://%s/hook/ocpp/%d/myEndpointName",
+            "value": "ws://%s:3777/hook/ocpp/%d/myEndpointName",
             "width": "600px"
         }
     ]
