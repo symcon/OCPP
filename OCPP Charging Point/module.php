@@ -76,7 +76,6 @@ class OCPPChargingPoint extends IPSModule
     public function Update()
     {
         $this->send($this->getTriggerMessageRequest('BootNotification'));
-        $this->send($this->getTriggerMessageRequest('MeterValues'));
         $this->send($this->getTriggerMessageRequest('StatusNotification'));
     }
 
@@ -237,6 +236,10 @@ class OCPPChargingPoint extends IPSModule
                 $this->RemoteStartTransaction($payload['connectorId']);
             }
         }
+
+        // Request meter values for specific connector on each status notification
+        // In particular we want to use this in combination of the Update function
+        $this->send($this->getTriggerMessageRequest('MeterValues', $payload['connectorId']));
     }
 
     private function processStartTransaction(string $messageID, $payload)
@@ -297,20 +300,24 @@ class OCPPChargingPoint extends IPSModule
         return rand(1, 5000);
     }
 
-    private function getTriggerMessageRequest(string $messageType)
+    private function getTriggerMessageRequest(string $messageType, int $connectorId = -1)
     {
         /**
          * OCPP-1.6 edition 2.pdf
          * Page 89
          * TriggerMessage.req
          */
+        $data = [
+            'requestedMessage' => $messageType
+        ];
+        if ($connectorId >= 0) {
+            $data['connectorId'] = $connectorId;
+        }
         return [
             CALL,
             $this->generateMessageID(),
             'TriggerMessage',
-            [
-                'requestedMessage' => $messageType
-            ]
+            $data
         ];
     }
 
