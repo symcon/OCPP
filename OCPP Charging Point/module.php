@@ -151,7 +151,7 @@ class OCPPChargingPoint extends IPSModule
          * Page 73
          * MeterValues.conf
          */
-        return  [
+        return [
             CALLRESULT,
             $messageID,
             []
@@ -165,7 +165,7 @@ class OCPPChargingPoint extends IPSModule
          * Page 73
          * StatusNotification.conf
          */
-        return  [
+        return [
             CALLRESULT,
             $messageID,
             []
