@@ -5,7 +5,9 @@
             "Vendor": "Hersteller",
             "Serial Number": "Seriennummer",
             "Model": "Modell",
-            "Charge Point Identity": "Ladestationsidentifikator"
+            "Charge Point Identity": "Ladestationsidentifikator",
+            "https://www.symcon.de/en/service/documentation/module-reference/ocpp/": "https://www.symcon.de/de/service/dokumentation/modulreferenz/ocpp/",
+            "OCPP Configurator": "OCPP Konfigurator"
         }
     }
 }
