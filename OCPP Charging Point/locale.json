@@ -11,7 +11,9 @@
             "ErrorCode (Connector %d)": "Fehlercode (Anschluss %d)",
             "Transaction (Connector %d)": "Transaktion (Anschluss %d)",
             "Some Wallboxes might keep stuck at 'Preparing' until a transaction is triggered": "Einige Wallboxen bleiben im Zustand 'Preparing' bis eine Transaktion manuell gestartet wird",
-            "Auto Start Transaction": "Transaktion automatisch starten"
+            "Auto Start Transaction": "Transaktion automatisch starten",
+            "https://www.symcon.de/en/service/documentation/module-reference/ocpp/": "https://www.symcon.de/de/service/dokumentation/modulreferenz/ocpp/",
+            "OCPP Charging Point": "OCPP Ladepunkt"
         }
     }
 }
