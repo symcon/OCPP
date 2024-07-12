@@ -93,7 +93,7 @@ class OCPPChargingPoint extends IPSModule
     public function RemoteStopCurrentTransaction(int $ConnectorId)
     {
         $ident = sprintf('TransactionID_%d', $ConnectorId);
-        $this->send($this->getRemoteStopTransactionRequest($this->GetIDForIdent($ident)));
+        $this->send($this->getRemoteStopTransactionRequest(GetValue($this->GetIDForIdent($ident))));
     }
 
     private function send($message)
