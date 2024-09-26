@@ -50,9 +50,9 @@ class OCPPConfigurator extends IPSModule
             $buffer = $this->GetBuffer($chargePointIdentity);
             $payload = json_decode($buffer, true);
             $availableChargePoints[] = [
-                'Vendor'              => $payload['chargePointVendor'],
-                'Model'               => $payload['chargePointModel'],
-                'SerialNumber'        => $payload['chargePointSerialNumber'],
+                'Vendor'              => $payload['chargePointVendor'] ?? '',
+                'Model'               => $payload['chargePointModel'] ?? '',
+                'SerialNumber'        => $payload['chargePointSerialNumber'] ?? '',
                 'ChargePointIdentity' => $chargePointIdentity,
                 'create'              => [
                     'moduleID'      => '{2EDDBD05-F295-3A79-00BD-B2FC0F107134}',
