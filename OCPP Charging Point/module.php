@@ -284,7 +284,7 @@ class OCPPChargingPoint extends IPSModule
     private function processStatusNotification(string $messageID, $payload)
     {
         $ident = sprintf('Available_%d', $payload['connectorId']);
-        $this->RegisterVariableString($ident, sprintf($this->Translate('Available (Connector %d)'), $payload['connectorId']), '~Switch', ($payload['connectorId'] + 1) * 100);
+        $this->RegisterVariableBoolean($ident, sprintf($this->Translate('Available (Connector %d)'), $payload['connectorId']), '~Switch', ($payload['connectorId'] + 1) * 100);
         $this->EnableAction($ident);
         $this->SetValue($ident, $payload['status'] != 'Unavailable');
 

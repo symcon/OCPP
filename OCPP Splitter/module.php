@@ -56,7 +56,7 @@ class OCPPSplitter extends WebHookModule
         $prefix = '/hook/ocpp/' . $this->InstanceID . '/';
 
         if (strpos($_SERVER['REQUEST_URI'], $prefix) === false) {
-            $this->SendDebug('Invalid', 'Hook is missing Charge Point Indentity', 0);
+            $this->SendDebug('Invalid', 'Hook is missing Charge Point Identity', 0);
             return;
         }
 
