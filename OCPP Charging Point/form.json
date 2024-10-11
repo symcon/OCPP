@@ -13,6 +13,42 @@
             "caption": "Auto Start Transaction",
             "name": "AutoStartTransaction",
             "type": "CheckBox"
+        },
+        {
+            "caption": "Validate Id Tag (e.g. RFID cards)",
+            "name": "ValidateIdTag",
+            "type": "CheckBox"
+        },
+        {
+            "type": "List",
+            "name": "ValidIdTagList",
+            "caption": "List of valid Id Tags (e.g. RFID cards)",
+            "add": true,
+            "delete": true,
+            "sort": {
+                "column": "IdTag",
+                "direction": "ascending"
+            },
+            "columns": [
+                {
+                    "caption": "Id Tag",
+                    "name": "IdTag",
+                    "width": "150px",
+                    "add": "",
+                    "edit": {
+                        "type": "ValidationTextBox"
+                    }
+                },
+                {
+                    "caption": "Information",
+                    "name": "Information",
+                    "width": "auto",
+                    "add": "",
+                    "edit": {
+                        "type": "ValidationTextBox"
+                    }
+                }
+            ]
         }
     ],
     "actions": [

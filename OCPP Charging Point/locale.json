@@ -10,10 +10,17 @@
             "Status (Connector %d)": "Status (Anschluss %d)",
             "ErrorCode (Connector %d)": "Fehlercode (Anschluss %d)",
             "Transaction (Connector %d)": "Transaktion (Anschluss %d)",
+            "Transaction Id (Connector %d)": "Transaktion Id (Anschluss %d)",
+            "Transaction Id Tag (Connector %d)": "Transaktion Id Tag (Anschluss %d)",
+            "Available (Connector %d)": "Verfügbar (Anschluss %d)",
             "Some Wallboxes might keep stuck at 'Preparing' until a transaction is triggered": "Einige Wallboxen bleiben im Zustand 'Preparing' bis eine Transaktion manuell gestartet wird",
             "Auto Start Transaction": "Transaktion automatisch starten",
             "https://www.symcon.de/en/service/documentation/module-reference/ocpp/": "https://www.symcon.de/de/service/dokumentation/modulreferenz/ocpp/",
-            "OCPP Charging Point": "OCPP Ladepunkt"
+            "OCPP Charging Point": "OCPP Ladepunkt",
+            "Validate Id Tag (e.g. RFID cards)": "Id Tag validieren (z.B. für RFID Karten)",
+            "List of valid Id Tags (e.g. RFID cards)": "Liste der gültigen Id Tags (z.B. RFID Karten)",
+            "Id Tag": "Id Tag",
+            "Information": "Information"
         }
     }
 }
