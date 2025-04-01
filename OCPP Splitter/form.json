@@ -1,4 +1,44 @@
 {
+    "elements": [
+        {
+            "type": "ExpansionPanel",
+            "caption": "Id Tag List Configuration",
+            "items": [
+                {
+                    "type": "List",
+                    "name": "ValidIdTagList",
+                    "caption": "Central list of valid Id Tags (e.g. RFID cards)",
+                    "add": true,
+                    "delete": true,
+                    "rowCount": 20,
+                    "sort": {
+                        "column": "IdTag",
+                        "direction": "ascending"
+                    },
+                    "columns": [
+                        {
+                            "caption": "Id Tag",
+                            "name": "IdTag",
+                            "width": "150px",
+                            "add": "",
+                            "edit": {
+                                "type": "ValidationTextBox"
+                            }
+                        },
+                        {
+                            "caption": "Information",
+                            "name": "Information",
+                            "width": "auto",
+                            "add": "",
+                            "edit": {
+                                "type": "ValidationTextBox"
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
     "actions": [
         {
             "type": "Label",

@@ -18,7 +18,7 @@
             "https://www.symcon.de/en/service/documentation/module-reference/ocpp/": "https://www.symcon.de/de/service/dokumentation/modulreferenz/ocpp/",
             "OCPP Charging Point": "OCPP Ladepunkt",
             "Validate Id Tag (e.g. RFID cards)": "Id Tag validieren (z.B. für RFID Karten)",
-            "List of valid Id Tags (e.g. RFID cards)": "Liste der gültigen Id Tags (z.B. RFID Karten)",
+            "Local list of valid Id Tags (e.g. RFID cards)": "Lokale Liste der gültigen Id Tags (z.B. RFID Karten)",
             "Id Tag": "Id Tag",
             "Information": "Information"
         }

@@ -10,7 +10,8 @@
             "Alternative 1: Systems requiring the full URL with separate endpoint": "Alternative 1: Systeme, welche die vollständige URL benötigen - jedoch den Endpunkt separat konfigurieren",
             "Alternative 2: Systems requiring the full URL including endpoint": "Alternative 2: Systeme, welche die vollständige URL benötigen inklusive einer Endpunktdefinition",
             "ws://%s:3777/hook/ocpp/%d/myEndpointName": "ws://%s:3777/hook/ocpp/%d/meinEndpunktName",
-            "https://www.symcon.de/en/service/documentation/module-reference/ocpp/": "https://www.symcon.de/de/service/dokumentation/modulreferenz/ocpp/"
+            "https://www.symcon.de/en/service/documentation/module-reference/ocpp/": "https://www.symcon.de/de/service/dokumentation/modulreferenz/ocpp/",
+            "Central list of valid Id Tags (e.g. RFID cards)": "Zentrale Liste der gültigen Id Tags (z.B. RFID Karten)"
         }
     }
 }

@@ -16,6 +16,8 @@ class OCPPSplitter extends WebHookModule
     {
         //Never delete this line!
         parent::Create();
+
+        $this->RegisterPropertyString('ValidIdTagList', '[]');
     }
 
     public function Destroy()
