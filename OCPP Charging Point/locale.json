@@ -12,6 +12,9 @@
             "Transaction (Connector %d)": "Transaktion (Anschluss %d)",
             "Transaction Id (Connector %d)": "Transaktion Id (Anschluss %d)",
             "Transaction Id Tag (Connector %d)": "Transaktion Id Tag (Anschluss %d)",
+            "Transaction Meter Start (Connector %d)": "Transaktion Zählerstand Start (Anschluss %d)",
+            "Transaction Meter End (Connector %d)": "Transaktion Zählerstand Ende (Anschluss %d)",
+            "Transaction Consumption (Connector %d)": "Transaktion Verbrauch (Anschluss %d)",
             "Available (Connector %d)": "Verfügbar (Anschluss %d)",
             "Some Wallboxes might keep stuck at 'Preparing' until a transaction is triggered": "Einige Wallboxen bleiben im Zustand 'Preparing' bis eine Transaktion manuell gestartet wird",
             "Auto Start Transaction": "Transaktion automatisch starten",
@@ -20,7 +23,8 @@
             "Validate Id Tag (e.g. RFID cards)": "Id Tag validieren (z.B. für RFID Karten)",
             "Local list of valid Id Tags (e.g. RFID cards)": "Lokale Liste der gültigen Id Tags (z.B. RFID Karten)",
             "Id Tag": "Id Tag",
-            "Information": "Information"
+            "Information": "Information",
+            "Last Id Tag": "Letzter Id Tag"
         }
     }
 }

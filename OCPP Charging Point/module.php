@@ -38,7 +38,7 @@ class OCPPChargingPoint extends IPSModule
         $this->SetReceiveDataFilter('.*' . $this->ReadPropertyString('ChargePointIdentity') . '.*');
 
         // Create Variable to remember the current IdTag (RFID)
-        $this->MaintainVariable("IdTag", $this->Translate("Id Tag"), 3, "", 4, $this->ReadPropertyInteger("ValidateIdTag") > 0);
+        $this->MaintainVariable("IdTag", $this->Translate("Last Id Tag"), 3, "", 4, $this->ReadPropertyInteger("ValidateIdTag") > 0);
     }
 
     public function ReceiveData($JSONString)
@@ -167,24 +167,24 @@ class OCPPChargingPoint extends IPSModule
         }
 
         $centralIdTag = false;
-        $json = json_decode($this->ReadPropertyString('ValidIdTagList'), true);
-        foreach ($json as $item) {
-            if ($idTag == $item['IdTag']) {
-                $centralIdTag = true;
-                break;
-            }
-        }
-
-        // Check if IdTag is in our lis
-        $localIdTag = false;
         $parentID = IPS_GetInstance($this->InstanceID)['ConnectionID'];
         if ($parentID > 0) {
             $json = json_decode(IPS_GetProperty($parentID, 'ValidIdTagList'), true);
             foreach ($json as $item) {
                 if ($idTag == $item['IdTag']) {
-                    $localIdTag = true;
+                    $centralIdTag = true;
                     break;
                 }
+            }
+        }
+
+        // Check if IdTag is in our lis
+        $localIdTag = false;
+        $json = json_decode($this->ReadPropertyString('ValidIdTagList'), true);
+        foreach ($json as $item) {
+            if ($idTag == $item['IdTag']) {
+                $localIdTag = true;
+                break;
             }
         }
 
@@ -365,14 +365,33 @@ class OCPPChargingPoint extends IPSModule
         $this->RegisterVariableBoolean($ident, sprintf($this->Translate('Transaction (Connector %d)'), $payload['connectorId']), '', ($payload['connectorId'] + 1) * 100 + 3);
         $this->SetValue($ident, true);
 
+        // Transaction_* > OCPP Values
+        // Transaction* > Internal values (without underscore!)
+
         $transactionId = $this->generateTransactionID();
         $ident = sprintf('TransactionID_%d', $payload['connectorId']);
         $this->RegisterVariableInteger($ident, sprintf($this->Translate('Transaction Id (Connector %d)'), $payload['connectorId']), '', ($payload['connectorId'] + 1) * 100 + 4);
         $this->SetValue($ident, $transactionId);
 
+        $ident = sprintf('Transaction_Meter_Start_%d', $payload['connectorId']);
+        $this->RegisterVariableInteger($ident, sprintf($this->Translate('Transaction Meter Start (Connector %d)'), $payload['connectorId']), '', ($payload['connectorId'] + 1) * 100 + 5);
+        $this->SetValue($ident, $payload['meterStart']);
+
+        $ident = sprintf('Transaction_Meter_End_%d', $payload['connectorId']);
+        $this->RegisterVariableInteger($ident, sprintf($this->Translate('Transaction Meter End (Connector %d)'), $payload['connectorId']), '', ($payload['connectorId'] + 1) * 100 + 5);
+        $this->SetValue($ident, 0);
+
         $ident = sprintf('Transaction_ID_Tag_%d', $payload['connectorId']);
-        $this->RegisterVariableString($ident, sprintf($this->Translate('Transaction Id Tag (Connector %d)'), $payload['connectorId']), '', ($payload['connectorId'] + 1) * 100 + 5);
-        $this->SetValue($ident, $payload['idTag']);
+        $this->RegisterVariableString($ident, sprintf($this->Translate('Transaction Id Tag (Connector %d)'), $payload['connectorId']), '', ($payload['connectorId'] + 1) * 100 + 6);
+
+        // Workaround: Alfen is sending a wrong IdTag. We need to use the IdTag from the last authorization
+        if ($this->GetValue("Vendor") == "Alfen BV") {
+            $payload['idTag'] = $this->GetValue("IdTag");
+        }
+
+        $ident = sprintf('TransactionConsumption_%d', $payload['connectorId']);
+        $this->RegisterVariableInteger($ident, sprintf($this->Translate('Transaction Consumption (Connector %d)'), $payload['connectorId']), '', ($payload['connectorId'] + 1) * 100 + 5);
+        $this->SetValue($ident, 0);
 
         $this->send($this->getStartTransactionResponse($messageID, $transactionId, $this->getIdTagStatus($payload['idTag'])));
     }
@@ -391,6 +410,13 @@ class OCPPChargingPoint extends IPSModule
                 }
             }
         }
+
+        // Update transaction values
+        $ident = sprintf('Transaction_Meter_End_%d', $payload['connectorId']);
+        $this->SetValue($ident, $payload['meterStop']);
+
+        $ident = sprintf('TransactionConsumption_%d', $payload['connectorId']);
+        $this->SetValue($ident, $payload['meterStop'] - $this->GetValue(sprintf('Transaction_Meter_Start_%d', $payload['connectorId'])));
 
         // The idTag might not be defined (Wallbox restarted and had to stop the transaction)
         // Therefore we can only validate if it is set (e.g. another RFID card was used to stop a running transaction)
