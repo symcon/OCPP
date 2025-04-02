@@ -38,7 +38,7 @@ class OCPPChargingPoint extends IPSModule
         $this->SetReceiveDataFilter('.*' . $this->ReadPropertyString('ChargePointIdentity') . '.*');
 
         // Create Variable to remember the current IdTag (RFID)
-        $this->MaintainVariable("IdTag", $this->Translate("Last Id Tag"), 3, "", 4, $this->ReadPropertyInteger("ValidateIdTag") > 0);
+        $this->MaintainVariable('IdTag', $this->Translate('Last Id Tag'), 3, '', 4, $this->ReadPropertyInteger('ValidateIdTag') > 0);
     }
 
     public function ReceiveData($JSONString)
@@ -107,8 +107,8 @@ class OCPPChargingPoint extends IPSModule
     public function GetConfigurationForm()
     {
         $form = json_decode(file_get_contents(__DIR__ . '/form.json'), true);
-        $form["elements"][3]["visible"] = !$this->ReadPropertyBoolean("AutoStartTransaction");
-        $form["elements"][4]["visible"] = $this->ReadPropertyInteger("ValidateIdTag") > 1;
+        $form['elements'][3]['visible'] = !$this->ReadPropertyBoolean('AutoStartTransaction');
+        $form['elements'][4]['visible'] = $this->ReadPropertyInteger('ValidateIdTag') > 1;
         return json_encode($form);
     }
 
@@ -150,9 +150,10 @@ class OCPPChargingPoint extends IPSModule
         }
     }
 
-    public function UIUpdateCP(bool $AutoStartTransaction, int $ValidateIdTag) {
-        $this->UpdateFormField("ValidateIdTag", "visible", !$AutoStartTransaction);
-        $this->UpdateFormField("ValidIdTagList", "visible", $ValidateIdTag > 1);
+    public function UIUpdateCP(bool $AutoStartTransaction, int $ValidateIdTag)
+    {
+        $this->UpdateFormField('ValidateIdTag', 'visible', !$AutoStartTransaction);
+        $this->UpdateFormField('ValidIdTagList', 'visible', $ValidateIdTag > 1);
     }
 
     private function getIdTagStatus($idTag)
@@ -385,8 +386,8 @@ class OCPPChargingPoint extends IPSModule
         $this->RegisterVariableString($ident, sprintf($this->Translate('Transaction Id Tag (Connector %d)'), $payload['connectorId']), '', ($payload['connectorId'] + 1) * 100 + 6);
 
         // Workaround: Alfen is sending a wrong IdTag. We need to use the IdTag from the last authorization
-        if ($this->GetValue("Vendor") == "Alfen BV") {
-            $payload['idTag'] = $this->GetValue("IdTag");
+        if ($this->GetValue('Vendor') == 'Alfen BV') {
+            $payload['idTag'] = $this->GetValue('IdTag');
         }
 
         $ident = sprintf('TransactionConsumption_%d', $payload['connectorId']);
@@ -432,10 +433,10 @@ class OCPPChargingPoint extends IPSModule
         // We only want to remember the last successful IdTag
         // This will be used to sum up all transactions of this IdTag
         if ($status == 'Accepted') {
-            $this->SetValue("IdTag", $payload['idTag']);
+            $this->SetValue('IdTag', $payload['idTag']);
         }
         else {
-            $this->SetValue("IdTag", "");
+            $this->SetValue('IdTag', '');
         }
 
         $this->send($this->getAuthorizeResponse($messageID, $status));
