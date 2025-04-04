@@ -60,6 +60,33 @@
                     }
                 },
                 {
+                    "caption": "First Name",
+                    "name": "FirstName",
+                    "width": "150px",
+                    "add": "",
+                    "edit": {
+                        "type": "ValidationTextBox"
+                    }
+                },
+                {
+                    "caption": "Last Name",
+                    "name": "LastName",
+                    "width": "150px",
+                    "add": "",
+                    "edit": {
+                        "type": "ValidationTextBox"
+                    }
+                },
+                {
+                    "caption": "E-Mail",
+                    "name": "EMail",
+                    "width": "150px",
+                    "add": "",
+                    "edit": {
+                        "type": "ValidationTextBox"
+                    }
+                },
+                {
                     "caption": "Information",
                     "name": "Information",
                     "width": "auto",

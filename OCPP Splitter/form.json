@@ -2,7 +2,7 @@
     "elements": [
         {
             "type": "ExpansionPanel",
-            "caption": "Id Tag List Configuration",
+            "caption": "Id List Configuration",
             "items": [
                 {
                     "type": "List",
@@ -19,6 +19,33 @@
                         {
                             "caption": "Id Tag",
                             "name": "IdTag",
+                            "width": "150px",
+                            "add": "",
+                            "edit": {
+                                "type": "ValidationTextBox"
+                            }
+                        },
+                        {
+                            "caption": "First Name",
+                            "name": "FirstName",
+                            "width": "150px",
+                            "add": "",
+                            "edit": {
+                                "type": "ValidationTextBox"
+                            }
+                        },
+                        {
+                            "caption": "Last Name",
+                            "name": "LastName",
+                            "width": "150px",
+                            "add": "",
+                            "edit": {
+                                "type": "ValidationTextBox"
+                            }
+                        },
+                        {
+                            "caption": "E-Mail",
+                            "name": "EMail",
                             "width": "150px",
                             "add": "",
                             "edit": {

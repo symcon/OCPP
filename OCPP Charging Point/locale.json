@@ -24,7 +24,14 @@
             "Local list of valid Id Tags (e.g. RFID cards)": "Lokale Liste der gültigen Id Tags (z.B. RFID Karten)",
             "Id Tag": "Id Tag",
             "Information": "Information",
-            "Last Id Tag": "Letzter Id Tag"
+            "First Name": "Vorname",
+            "Last Name": "Nachname",
+            "E-Mail": "E-Mail",
+            "Last Id Tag": "Letzter Id Tag",
+            "No validation. Allow all Id Tags": "Keine Validierung. Alle Id Tags erlauben",
+            "Allow only Central Id Tag list": "Nur zentrale Id Tag Liste erlauben",
+            "Allow only Local Id Tag list": "Nur lokale Id Tag Liste erlauben",
+            "Allow both Id Tag lists": "Beide Id Tag Listen erlauben"
         }
     }
 }
