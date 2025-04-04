@@ -270,7 +270,7 @@ class OCPPChargingPoint extends IPSModule
         return [
             CALLRESULT,
             $messageID,
-            []
+            new stdClass()
         ];
     }
 
@@ -284,7 +284,7 @@ class OCPPChargingPoint extends IPSModule
         return [
             CALLRESULT,
             $messageID,
-            []
+            new stdClass()
         ];
     }
 
