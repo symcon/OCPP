@@ -99,7 +99,7 @@ class OCPPSplitter extends WebHookModule
 
     private function send($chargePointIdentity, $message)
     {
-        $message = json_encode($message);
+        $message = json_encode($message, JSON_FORCE_OBJECT);
         $this->SendDebug('Transmit [' . $chargePointIdentity . ']', $message, 0);
         $id = IPS_GetInstanceListByModuleID('{015A6EB8-D6E5-4B93-B496-0D3F77AE9FE1}')[0];
         WC_PushMessage($id, '/hook/ocpp/' . $this->InstanceID . '/' . $chargePointIdentity, $message);
