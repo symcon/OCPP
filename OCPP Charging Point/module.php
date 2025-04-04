@@ -214,12 +214,12 @@ class OCPPChargingPoint extends IPSModule
 
     private function send($message)
     {
-        $this->SendDebug('Transmitted', json_encode($message, JSON_FORCE_OBJECT), 0);
+        $this->SendDebug('Transmitted', json_encode($message), 0);
         $this->SendDataToParent(json_encode([
             'DataID'              => '{8B051B38-91B7-97B3-2F99-BCB86C0925FA}',
             'ChargePointIdentity' => $this->ReadPropertyString('ChargePointIdentity'),
             'Message'             => $message
-        ], JSON_FORCE_OBJECT));
+        ]));
     }
 
     private function getStopTransactionResponse(string $messageID, string $status)
