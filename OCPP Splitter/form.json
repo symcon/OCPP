@@ -2,7 +2,7 @@
     "elements": [
         {
             "type": "ExpansionPanel",
-            "caption": "Id List Configuration",
+            "caption": "Id Tag Configuration",
             "items": [
                 {
                     "type": "List",
