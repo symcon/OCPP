@@ -38,7 +38,7 @@ class OCPPChargingPoint extends IPSModule
         $this->SetReceiveDataFilter('.*' . $this->ReadPropertyString('ChargePointIdentity') . '.*');
 
         // Create Variable to remember the current IdTag (RFID)
-        $this->MaintainVariable('IdTag', $this->Translate('Last Id Tag'), 3, '', 4, $this->ReadPropertyInteger('ValidateIdTag') > 0);
+        $this->RegisterVariableString('IdTag', $this->Translate('Last Id Tag'), '', 4);
     }
 
     public function ReceiveData($JSONString)
@@ -400,24 +400,28 @@ class OCPPChargingPoint extends IPSModule
     private function processStopTransaction(string $messageID, $payload)
     {
         // Stop Transaction does not transmit the connectorId. We need to search it by the TransactionID.
+        $connectorId = false;
         foreach (IPS_GetChildrenIDs($this->InstanceID) as $id) {
             if (IPS_VariableExists($id)) {
                 $o = IPS_GetObject($id);
                 if (substr($o['ObjectIdent'], 0, 13) == 'TransactionID') {
                     if (GetValue($id) == $payload['transactionId']) {
-                        $this->SetValue($o['ObjectIdent'], 0);
-                        $this->SetValue(str_replace('TransactionID', 'Transaction', $o['ObjectIdent']), false);
+                        $connectorId = str_replace('TransactionID_', '', $o['ObjectIdent']);
                     }
                 }
             }
         }
 
-        // Update transaction values
-        $ident = sprintf('Transaction_Meter_End_%d', $payload['connectorId']);
-        $this->SetValue($ident, $payload['meterStop']);
+        if ($connectorId === false) {
+            $this->SendDebug('Error', 'TransactionID not found', 0);
+            return;
+        }
 
-        $ident = sprintf('TransactionConsumption_%d', $payload['connectorId']);
-        $this->SetValue($ident, $payload['meterStop'] - $this->GetValue(sprintf('Transaction_Meter_Start_%d', $payload['connectorId'])));
+        // Update transaction values
+        $this->SetValue(sprintf('Transaction_%d', $payload['connectorId']), false);
+        $this->SetValue(sprintf('TransactionID_%d', $connectorId), 0);
+        $this->SetValue(sprintf('Transaction_Meter_End_%d', $connectorId), $payload['meterStop']);
+        $this->SetValue(sprintf('TransactionConsumption_%d', $connectorId), $payload['meterStop'] - $this->GetValue(sprintf('Transaction_Meter_Start_%d', $connectorId)));
 
         // The idTag might not be defined (Wallbox restarted and had to stop the transaction)
         // Therefore we can only validate if it is set (e.g. another RFID card was used to stop a running transaction)
