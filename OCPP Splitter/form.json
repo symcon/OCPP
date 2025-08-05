@@ -1,4 +1,71 @@
 {
+    "elements": [
+        {
+            "type": "ExpansionPanel",
+            "caption": "Id Tag Configuration",
+            "items": [
+                {
+                    "type": "List",
+                    "name": "ValidIdTagList",
+                    "caption": "Central list of valid Id Tags (e.g. RFID cards)",
+                    "add": true,
+                    "delete": true,
+                    "rowCount": 20,
+                    "sort": {
+                        "column": "IdTag",
+                        "direction": "ascending"
+                    },
+                    "columns": [
+                        {
+                            "caption": "Id Tag",
+                            "name": "IdTag",
+                            "width": "150px",
+                            "add": "",
+                            "edit": {
+                                "type": "ValidationTextBox"
+                            }
+                        },
+                        {
+                            "caption": "First Name",
+                            "name": "FirstName",
+                            "width": "150px",
+                            "add": "",
+                            "edit": {
+                                "type": "ValidationTextBox"
+                            }
+                        },
+                        {
+                            "caption": "Last Name",
+                            "name": "LastName",
+                            "width": "150px",
+                            "add": "",
+                            "edit": {
+                                "type": "ValidationTextBox"
+                            }
+                        },
+                        {
+                            "caption": "E-Mail",
+                            "name": "EMail",
+                            "width": "150px",
+                            "add": "",
+                            "edit": {
+                                "type": "ValidationTextBox"
+                            }
+                        },
+                        {
+                            "caption": "Information",
+                            "name": "Information",
+                            "width": "auto",
+                            "add": "",
+                            "edit": {
+                                "type": "ValidationTextBox"
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
     "actions": [
         {
             "type": "Label",

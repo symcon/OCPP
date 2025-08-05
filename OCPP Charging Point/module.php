@@ -14,6 +14,8 @@ class OCPPChargingPoint extends IPSModule
         //Properties
         $this->RegisterPropertyString('ChargePointIdentity', '');
         $this->RegisterPropertyBoolean('AutoStartTransaction', false);
+        $this->RegisterPropertyInteger('ValidateIdTag', 0);
+        $this->RegisterPropertyString('ValidIdTagList', '[]');
 
         //Variables
         $this->RegisterVariableString('Vendor', $this->Translate('Vendor'), '', 1);
@@ -32,7 +34,11 @@ class OCPPChargingPoint extends IPSModule
         //Never delete this line!
         parent::ApplyChanges();
 
+        // Filter only our ChargePoint
         $this->SetReceiveDataFilter('.*' . $this->ReadPropertyString('ChargePointIdentity') . '.*');
+
+        // Create Variable to remember the current IdTag (RFID)
+        $this->RegisterVariableString('IdTag', $this->Translate('Last Id Tag'), '', 4);
     }
 
     public function ReceiveData($JSONString)
@@ -62,15 +68,48 @@ class OCPPChargingPoint extends IPSModule
             case 'StopTransaction':
                 $this->processStopTransaction($messageID, $payload);
                 break;
+            case 'Authorize':
+                $this->processAuthorize($messageID, $payload);
+                break;
+            case 'ChangeAvailability':
+                $this->processChangeAvailability($messageID, $payload);
+                break;
             case 'Heartbeat':
                 $this->send($this->getHeartbeatResponse($messageID));
                 break;
             case 'DataTransfer':
-                $this->send($this->getDataTransferResponse($messageID));
+                $this->send($this->getDataTransferResponse($messageID, 'Accepted'));
                 break;
             default:
                 break;
         }
+    }
+
+    public function RequestAction($Ident, $Value)
+    {
+
+        $ConnectorId = 0;
+        $parts = explode('_', $Ident);
+        if (count($parts) > 1) {
+            $Ident = $parts[0];
+            $ConnectorId = $parts[1];
+        }
+
+        switch ($Ident) {
+            case 'Available':
+                $this->send($this->getChangeAvailabilityRequest($ConnectorId, $Value ? 'Operative' : 'Inoperative'));
+                break;
+            default:
+                throw new Exception('Invalid Ident');
+        }
+    }
+
+    public function GetConfigurationForm()
+    {
+        $form = json_decode(file_get_contents(__DIR__ . '/form.json'), true);
+        $form['elements'][3]['visible'] = !$this->ReadPropertyBoolean('AutoStartTransaction');
+        $form['elements'][4]['visible'] = $this->ReadPropertyInteger('ValidateIdTag') > 1;
+        return json_encode($form);
     }
 
     public function Update()
@@ -82,7 +121,15 @@ class OCPPChargingPoint extends IPSModule
 
     public function RemoteStartTransaction(int $ConnectorId)
     {
-        $this->send($this->getRemoteStartTransactionRequest($ConnectorId, 'symcon'));
+        $idTag = 'symcon';
+
+        // Update IdTag to Symcon if we remotely start the transaction
+        $value = @$this->GetValue('IdTag');
+        if ($value !== false) {
+            $this->SetValue('IdTag', $idTag);
+        }
+
+        $this->send($this->getRemoteStartTransactionRequest($ConnectorId, $idTag));
     }
 
     public function RemoteStopTransaction(int $TransactionId)
@@ -98,10 +145,71 @@ class OCPPChargingPoint extends IPSModule
         $id = @$this->GetIDForIdent($ident);
         if ($id === false) {
             $this->send($this->getRemoteStopTransactionRequest(0));
-        }
-        else {
+        } else {
             $this->send($this->getRemoteStopTransactionRequest(GetValue($id)));
         }
+    }
+
+    public function UIUpdateCP(bool $AutoStartTransaction, int $ValidateIdTag)
+    {
+        $this->UpdateFormField('ValidateIdTag', 'visible', !$AutoStartTransaction);
+        $this->UpdateFormField('ValidIdTagList', 'visible', $ValidateIdTag > 1);
+    }
+
+    private function getIdTagStatus($idTag)
+    {
+        if ($this->ReadPropertyBoolean('AutoStartTransaction')) {
+            return 'Accepted';
+        }
+
+        // Our internal RemoteStartTransaction command was used
+        if ($idTag == 'symcon') {
+            return 'Accepted';
+        }
+
+        $centralIdTag = false;
+        $parentID = IPS_GetInstance($this->InstanceID)['ConnectionID'];
+        if ($parentID > 0) {
+            $json = json_decode(IPS_GetProperty($parentID, 'ValidIdTagList'), true);
+            foreach ($json as $item) {
+                if ($idTag == $item['IdTag']) {
+                    $centralIdTag = true;
+                    break;
+                }
+            }
+        }
+
+        // Check if IdTag is in our lis
+        $localIdTag = false;
+        $json = json_decode($this->ReadPropertyString('ValidIdTagList'), true);
+        foreach ($json as $item) {
+            if ($idTag == $item['IdTag']) {
+                $localIdTag = true;
+                break;
+            }
+        }
+
+        switch ($this->ReadPropertyInteger('ValidateIdTag')) {
+            case 0:
+                return 'Accepted';
+            case 1: // Central Id Tag list
+                if ($centralIdTag) {
+                    return 'Accepted';
+                }
+                break;
+            case 2: // Local Id Tag list
+                if ($localIdTag) {
+                    return 'Accepted';
+                }
+                break;
+            case 3: // Both Id Tag lists
+                if ($centralIdTag || $localIdTag) {
+                    return 'Accepted';
+                }
+                break;
+        }
+
+        return 'Invalid';
     }
 
     private function send($message)
@@ -114,7 +222,7 @@ class OCPPChargingPoint extends IPSModule
         ]));
     }
 
-    private function getStopTransactionResponse(string $messageID)
+    private function getStopTransactionResponse(string $messageID, string $status)
     {
         /**
          * OCPP-1.6 edition 2.pdf
@@ -126,18 +234,18 @@ class OCPPChargingPoint extends IPSModule
             $messageID,
             [
                 'idTagInfo' => [
-                    'status' => 'Accepted'
+                    'status' => $status
                 ]
             ]
         ];
     }
 
-    private function getStartTransactionResponse(string $messageID, int $transactionId)
+    private function getStartTransactionResponse(string $messageID, int $transactionId, string $status)
     {
         /**
          * OCPP-1.6 edition 2.pdf
          * Page 76
-         * StartTrasaction.conf
+         * StartTransaction.conf
          */
 
         return [
@@ -145,7 +253,7 @@ class OCPPChargingPoint extends IPSModule
             $messageID,
             [
                 'idTagInfo' => [
-                    'status' => 'Accepted'
+                    'status' => $status
                 ],
                 'transactionId' => $transactionId
             ]
@@ -162,7 +270,7 @@ class OCPPChargingPoint extends IPSModule
         return [
             CALLRESULT,
             $messageID,
-            []
+            new stdClass()
         ];
     }
 
@@ -176,7 +284,7 @@ class OCPPChargingPoint extends IPSModule
         return [
             CALLRESULT,
             $messageID,
-            []
+            new stdClass()
         ];
     }
 
@@ -229,6 +337,11 @@ class OCPPChargingPoint extends IPSModule
 
     private function processStatusNotification(string $messageID, $payload)
     {
+        $ident = sprintf('Available_%d', $payload['connectorId']);
+        $this->RegisterVariableBoolean($ident, sprintf($this->Translate('Available (Connector %d)'), $payload['connectorId']), '~Switch', ($payload['connectorId'] + 1) * 100);
+        $this->EnableAction($ident);
+        $this->SetValue($ident, $payload['status'] != 'Unavailable');
+
         $ident = sprintf('Status_%d', $payload['connectorId']);
         $this->RegisterVariableString($ident, sprintf($this->Translate('Status (Connector %d)'), $payload['connectorId']), '', ($payload['connectorId'] + 1) * 100 + 1);
         $this->SetValue($ident, $payload['status']);
@@ -253,33 +366,92 @@ class OCPPChargingPoint extends IPSModule
         $this->RegisterVariableBoolean($ident, sprintf($this->Translate('Transaction (Connector %d)'), $payload['connectorId']), '', ($payload['connectorId'] + 1) * 100 + 3);
         $this->SetValue($ident, true);
 
+        // Transaction_* > OCPP Values
+        // Transaction* > Internal values (without underscore!)
+
         $transactionId = $this->generateTransactionID();
         $ident = sprintf('TransactionID_%d', $payload['connectorId']);
-        $this->RegisterVariableInteger($ident, sprintf($this->Translate('TransactionID (Connector %d)'), $payload['connectorId']), '', ($payload['connectorId'] + 1) * 100 + 4);
+        $this->RegisterVariableInteger($ident, sprintf($this->Translate('Transaction Id (Connector %d)'), $payload['connectorId']), '', ($payload['connectorId'] + 1) * 100 + 4);
         $this->SetValue($ident, $transactionId);
 
-        $this->send($this->getStartTransactionResponse($messageID, $transactionId));
+        $ident = sprintf('Transaction_Meter_Start_%d', $payload['connectorId']);
+        $this->RegisterVariableInteger($ident, sprintf($this->Translate('Transaction Meter Start (Connector %d)'), $payload['connectorId']), '', ($payload['connectorId'] + 1) * 100 + 5);
+        $this->SetValue($ident, $payload['meterStart']);
+
+        $ident = sprintf('Transaction_Meter_End_%d', $payload['connectorId']);
+        $this->RegisterVariableInteger($ident, sprintf($this->Translate('Transaction Meter End (Connector %d)'), $payload['connectorId']), '', ($payload['connectorId'] + 1) * 100 + 5);
+        $this->SetValue($ident, 0);
+
+        $ident = sprintf('Transaction_ID_Tag_%d', $payload['connectorId']);
+        $this->RegisterVariableString($ident, sprintf($this->Translate('Transaction Id Tag (Connector %d)'), $payload['connectorId']), '', ($payload['connectorId'] + 1) * 100 + 6);
+
+        // Workaround: Alfen is sending a wrong IdTag. We need to use the IdTag from the last authorization
+        if ($this->GetValue('Vendor') == 'Alfen BV') {
+            $payload['idTag'] = $this->GetValue('IdTag');
+        }
+
+        $ident = sprintf('TransactionConsumption_%d', $payload['connectorId']);
+        $this->RegisterVariableInteger($ident, sprintf($this->Translate('Transaction Consumption (Connector %d)'), $payload['connectorId']), '', ($payload['connectorId'] + 1) * 100 + 5);
+        $this->SetValue($ident, 0);
+
+        $this->send($this->getStartTransactionResponse($messageID, $transactionId, $this->getIdTagStatus($payload['idTag'])));
     }
 
     private function processStopTransaction(string $messageID, $payload)
     {
         // Stop Transaction does not transmit the connectorId. We need to search it by the TransactionID.
+        $connectorId = false;
         foreach (IPS_GetChildrenIDs($this->InstanceID) as $id) {
             if (IPS_VariableExists($id)) {
                 $o = IPS_GetObject($id);
                 if (substr($o['ObjectIdent'], 0, 13) == 'TransactionID') {
                     if (GetValue($id) == $payload['transactionId']) {
-                        $this->SetValue($o['ObjectIdent'], 0);
-                        $this->SetValue(str_replace('TransactionID', 'Transaction', $o['ObjectIdent']), false);
+                        $connectorId = str_replace('TransactionID_', '', $o['ObjectIdent']);
                     }
                 }
             }
         }
 
-        $this->send($this->getStopTransactionResponse($messageID));
+        if ($connectorId === false) {
+            $this->SendDebug('Error', 'TransactionID not found', 0);
+            return;
+        }
+
+        // Update transaction values
+        $this->SetValue(sprintf('Transaction_%d', $payload['connectorId']), false);
+        $this->SetValue(sprintf('TransactionID_%d', $connectorId), 0);
+        $this->SetValue(sprintf('Transaction_Meter_End_%d', $connectorId), $payload['meterStop']);
+        $this->SetValue(sprintf('TransactionConsumption_%d', $connectorId), $payload['meterStop'] - $this->GetValue(sprintf('Transaction_Meter_Start_%d', $connectorId)));
+
+        // The idTag might not be defined (Wallbox restarted and had to stop the transaction)
+        // Therefore we can only validate if it is set (e.g. another RFID card was used to stop a running transaction)
+        $status = isset($payload['idTag']) ? $this->getIdTagStatus($payload['idTag']) : 'Accepted';
+
+        $this->send($this->getStopTransactionResponse($messageID, $status));
     }
 
-    private function getDataTransferResponse(string $messageID)
+    private function processAuthorize(string $messageID, $payload)
+    {
+        $status = $this->getIdTagStatus($payload['idTag']);
+
+        // We only want to remember the last successful IdTag
+        // This will be used to sum up all transactions of this IdTag
+        if ($status == 'Accepted') {
+            $this->SetValue('IdTag', $payload['idTag']);
+        }
+        else {
+            $this->SetValue('IdTag', '');
+        }
+
+        $this->send($this->getAuthorizeResponse($messageID, $status));
+    }
+
+    private function processChangeAvailability(string $messageID, $payload)
+    {
+        // Nothing to do yet
+    }
+
+    private function getDataTransferResponse(string $messageID, string $status)
     {
         /**
          * OCPP-1.6 edition 2.pdf
@@ -290,7 +462,25 @@ class OCPPChargingPoint extends IPSModule
             CALLRESULT,
             $messageID,
             [
-                'status' => 'Accepted'
+                'status' => $status
+            ]
+        ];
+    }
+
+    private function getAuthorizeResponse(string $messageID, string $status)
+    {
+        /**
+         * OCPP-1.6 edition 2.pdf
+         * Page 64
+         * Authorize.conf
+         */
+        return [
+            CALLRESULT,
+            $messageID,
+            [
+                'idTagInfo' => [
+                    'status' => $status
+                ],
             ]
         ];
     }
@@ -353,6 +543,24 @@ class OCPPChargingPoint extends IPSModule
             'RemoteStopTransaction',
             [
                 'transactionId' => $transactionId
+            ]
+        ];
+    }
+
+    private function getChangeAvailabilityRequest(int $connectorId, string $type)
+    {
+        /**
+         * OCPP-1.6 edition 2.pdf
+         * Page 65
+         * ChangeAvailability.req
+         */
+        return [
+            CALL,
+            $this->generateMessageID(),
+            'ChangeAvailability',
+            [
+                'connectorId' => $connectorId,
+                'type'        => $type,
             ]
         ];
     }

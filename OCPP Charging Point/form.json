@@ -12,7 +12,90 @@
         {
             "caption": "Auto Start Transaction",
             "name": "AutoStartTransaction",
-            "type": "CheckBox"
+            "type": "CheckBox",
+            "onChange": "OCPP_UIUpdateCP($id, $AutoStartTransaction, $ValidateIdTag);"
+        },
+        {
+            "type": "Select",
+            "name": "ValidateIdTag",
+            "caption": "Validate Id Tag (e.g. RFID cards)",
+            "options": [
+                {
+                    "caption": "No validation. Allow all Id Tags",
+                    "value": 0
+                },
+                {
+                    "caption": "Allow only Central Id Tag list",
+                    "value": 1
+                },
+                {
+                    "caption": "Allow only Local Id Tag list",
+                    "value": 2
+                },
+                {
+                    "caption": "Allow both Id Tag lists",
+                    "value": 3
+                }
+            ],
+            "onChange": "OCPP_UIUpdateCP($id, $AutoStartTransaction, $ValidateIdTag);"
+        },
+        {
+            "type": "List",
+            "name": "ValidIdTagList",
+            "caption": "Local list of valid Id Tags (e.g. RFID cards)",
+            "add": true,
+            "delete": true,
+            "sort": {
+                "column": "IdTag",
+                "direction": "ascending"
+            },
+            "columns": [
+                {
+                    "caption": "Id Tag",
+                    "name": "IdTag",
+                    "width": "150px",
+                    "add": "",
+                    "edit": {
+                        "type": "ValidationTextBox"
+                    }
+                },
+                {
+                    "caption": "First Name",
+                    "name": "FirstName",
+                    "width": "150px",
+                    "add": "",
+                    "edit": {
+                        "type": "ValidationTextBox"
+                    }
+                },
+                {
+                    "caption": "Last Name",
+                    "name": "LastName",
+                    "width": "150px",
+                    "add": "",
+                    "edit": {
+                        "type": "ValidationTextBox"
+                    }
+                },
+                {
+                    "caption": "E-Mail",
+                    "name": "EMail",
+                    "width": "150px",
+                    "add": "",
+                    "edit": {
+                        "type": "ValidationTextBox"
+                    }
+                },
+                {
+                    "caption": "Information",
+                    "name": "Information",
+                    "width": "auto",
+                    "add": "",
+                    "edit": {
+                        "type": "ValidationTextBox"
+                    }
+                }
+            ]
         }
     ],
     "actions": [

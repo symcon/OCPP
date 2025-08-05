@@ -10,10 +10,28 @@
             "Status (Connector %d)": "Status (Anschluss %d)",
             "ErrorCode (Connector %d)": "Fehlercode (Anschluss %d)",
             "Transaction (Connector %d)": "Transaktion (Anschluss %d)",
+            "Transaction Id (Connector %d)": "Transaktion Id (Anschluss %d)",
+            "Transaction Id Tag (Connector %d)": "Transaktion Id Tag (Anschluss %d)",
+            "Transaction Meter Start (Connector %d)": "Transaktion Zählerstand Start (Anschluss %d)",
+            "Transaction Meter End (Connector %d)": "Transaktion Zählerstand Ende (Anschluss %d)",
+            "Transaction Consumption (Connector %d)": "Transaktion Verbrauch (Anschluss %d)",
+            "Available (Connector %d)": "Verfügbar (Anschluss %d)",
             "Some Wallboxes might keep stuck at 'Preparing' until a transaction is triggered": "Einige Wallboxen bleiben im Zustand 'Preparing' bis eine Transaktion manuell gestartet wird",
             "Auto Start Transaction": "Transaktion automatisch starten",
             "https://www.symcon.de/en/service/documentation/module-reference/ocpp/": "https://www.symcon.de/de/service/dokumentation/modulreferenz/ocpp/",
-            "OCPP Charging Point": "OCPP Ladepunkt"
+            "OCPP Charging Point": "OCPP Ladepunkt",
+            "Validate Id Tag (e.g. RFID cards)": "Id Tag validieren (z.B. für RFID Karten)",
+            "Local list of valid Id Tags (e.g. RFID cards)": "Lokale Liste der gültigen Id Tags (z.B. RFID Karten)",
+            "Id Tag": "Id Tag",
+            "Information": "Information",
+            "First Name": "Vorname",
+            "Last Name": "Nachname",
+            "E-Mail": "E-Mail",
+            "Last Id Tag": "Letzter Id Tag",
+            "No validation. Allow all Id Tags": "Keine Validierung. Alle Id Tags erlauben",
+            "Allow only Central Id Tag list": "Nur zentrale Id Tag Liste erlauben",
+            "Allow only Local Id Tag list": "Nur lokale Id Tag Liste erlauben",
+            "Allow both Id Tag lists": "Beide Id Tag Listen erlauben"
         }
     }
 }
