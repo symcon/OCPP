@@ -53,6 +53,13 @@ class OCPPSplitter extends WebHookModule
     {
         $message = file_get_contents('php://input');
 
+        $this->SendDebug("Data", $message, 0);
+
+        if (!$message) {
+            echo "Please use WebSockets and send a valid OCPP message!";
+            return;
+        }
+
         $prefix = '/hook/ocpp/' . $this->InstanceID . '/';
 
         if (strpos($_SERVER['REQUEST_URI'], $prefix) === false) {
