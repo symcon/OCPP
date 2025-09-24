@@ -55,6 +55,7 @@ class OCPPConfigurator extends IPSModule
                 'SerialNumber'        => $payload['chargePointSerialNumber'] ?? '',
                 'ChargePointIdentity' => $chargePointIdentity,
                 'create'              => [
+                    'name'          => $chargePointIdentity,
                     'moduleID'      => '{2EDDBD05-F295-3A79-00BD-B2FC0F107134}',
                     'configuration' => [
                         'ChargePointIdentity' => $chargePointIdentity,
