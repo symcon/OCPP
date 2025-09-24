@@ -66,6 +66,9 @@ class OCPPConfigurator extends IPSModule
 
         //Get the Instance and set the right ids or add it to the list
         foreach (IPS_GetInstanceListByModuleID('{2EDDBD05-F295-3A79-00BD-B2FC0F107134}') as $instanceID) {
+            if (IPS_GetInstance($this->InstanceID)['ConnectionID'] !== IPS_GetInstance($instanceID)['ConnectionID']) {
+                continue;
+            }
             $found = false;
             foreach ($availableChargePoints as $index => $availableChargePoint) {
                 if ($availableChargePoint['ChargePointIdentity'] == IPS_GetProperty($instanceID, 'ChargePointIdentity')) {
