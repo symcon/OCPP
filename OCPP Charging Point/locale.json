@@ -17,7 +17,6 @@
             "Transaction Consumption (Connector %d)": "Transaktion Verbrauch (Anschluss %d)",
             "Available (Connector %d)": "Verfügbar (Anschluss %d)",
             "Some Wallboxes might keep stuck at 'Preparing' until a transaction is triggered": "Einige Wallboxen bleiben im Zustand 'Preparing' bis eine Transaktion manuell gestartet wird",
-            "Auto Start Transaction": "Transaktion automatisch starten",
             "https://www.symcon.de/en/service/documentation/module-reference/ocpp/": "https://www.symcon.de/de/service/dokumentation/modulreferenz/ocpp/",
             "OCPP Charging Point": "OCPP Ladepunkt",
             "Validate Id Tag (e.g. RFID cards)": "Id Tag validieren (z.B. für RFID Karten)",
@@ -28,10 +27,13 @@
             "Last Name": "Nachname",
             "E-Mail": "E-Mail",
             "Last Id Tag": "Letzter Id Tag",
-            "No validation. Allow all Id Tags": "Keine Validierung. Alle Id Tags erlauben",
-            "Allow only Central Id Tag list": "Nur zentrale Id Tag Liste erlauben",
-            "Allow only Local Id Tag list": "Nur lokale Id Tag Liste erlauben",
-            "Allow both Id Tag lists": "Beide Id Tag Listen erlauben"
+            "Start transaction...": "Transaktion starten...",
+            "... automatically on connection": "... automatisch bei Verbindung",
+            "... when an Id Tag is validated - Allow all Id Tags": "... wenn ein Id Tag validiert wird - Alle Id Tags erlauben",
+            "... when an Id Tag is validated - Allow only Central Id Tag list": "... wenn ein Id Tag validiert wird - Nur zentrale Id Tag Liste erlauben",
+            "... when an Id Tag is validated - Allow only Local Id Tag list": "... wenn ein Id Tag validiert wird - Nur lokale Id Tag Liste erlauben",
+            "... when an Id Tag is validated - Allow both Id Tag lists": "... wenn ein Id Tag validiert wird - Beide Id Tag Listen erlauben",
+            "... manually only": "... nur manuell"
         }
     }
 }

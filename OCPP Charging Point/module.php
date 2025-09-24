@@ -6,6 +6,15 @@ include_once __DIR__ . '/../libs/OCPPConstants.php';
 
 class OCPPChargingPoint extends IPSModule
 {
+
+    private const START_AUTOMATIC = -1;
+    private const START_ID_ALL = 0;
+    private const START_ID_CENTRAL = 1;
+    private const START_ID_LOCAL = 2;
+    private const START_ID_BOTH = 3;
+    private const START_MANUALLY = 4;
+
+
     public function Create()
     {
         //Never delete this line!
@@ -13,7 +22,6 @@ class OCPPChargingPoint extends IPSModule
 
         //Properties
         $this->RegisterPropertyString('ChargePointIdentity', '');
-        $this->RegisterPropertyBoolean('AutoStartTransaction', false);
         $this->RegisterPropertyInteger('ValidateIdTag', 0);
         $this->RegisterPropertyString('ValidIdTagList', '[]');
 
@@ -107,9 +115,16 @@ class OCPPChargingPoint extends IPSModule
     public function GetConfigurationForm()
     {
         $form = json_decode(file_get_contents(__DIR__ . '/form.json'), true);
-        $form['elements'][3]['visible'] = !$this->ReadPropertyBoolean('AutoStartTransaction');
-        $form['elements'][4]['visible'] = $this->ReadPropertyInteger('ValidateIdTag') > 1;
+        $form['elements'][3]['visible'] = in_array($this->ReadPropertyInteger('ValidateIdTag'), [self::START_ID_LOCAL, self::START_ID_BOTH]);
         return json_encode($form);
+    }
+
+    public function Migrate($configurationDataString) {
+        $configurationData = json_decode($configurationDataString, true);
+        if (isset($configurationData['configuration']['AutoStartTransaction']) && $configurationData['configuration']['AutoStartTransaction']) {
+            $configurationData['configuration']['ValidateIdTag'] = self::START_AUTOMATIC;
+        }
+        return json_encode($configurationData);
     }
 
     public function Update()
@@ -150,15 +165,15 @@ class OCPPChargingPoint extends IPSModule
         }
     }
 
-    public function UIUpdateCP(bool $AutoStartTransaction, int $ValidateIdTag)
+    public function UIUpdateCP(int $ValidateIdTag)
     {
-        $this->UpdateFormField('ValidateIdTag', 'visible', !$AutoStartTransaction);
-        $this->UpdateFormField('ValidIdTagList', 'visible', $ValidateIdTag > 1);
+        $this->UpdateFormField('ValidIdTagList', 'visible', in_array($ValidateIdTag, [self::START_ID_LOCAL, self::START_ID_BOTH]));
     }
 
     private function getIdTagStatus($idTag)
     {
-        if ($this->ReadPropertyBoolean('AutoStartTransaction')) {
+        $startStrategy = $this->ReadPropertyInteger('ValidateIdTag');
+        if ($startStrategy == self::START_AUTOMATIC) {
             return 'Accepted';
         }
 
@@ -190,19 +205,19 @@ class OCPPChargingPoint extends IPSModule
         }
 
         switch ($this->ReadPropertyInteger('ValidateIdTag')) {
-            case 0:
+            case self::START_ID_ALL:
                 return 'Accepted';
-            case 1: // Central Id Tag list
+            case self::START_ID_CENTRAL:
                 if ($centralIdTag) {
                     return 'Accepted';
                 }
                 break;
-            case 2: // Local Id Tag list
+            case self::START_ID_LOCAL:
                 if ($localIdTag) {
                     return 'Accepted';
                 }
                 break;
-            case 3: // Both Id Tag lists
+            case self::START_ID_BOTH:
                 if ($centralIdTag || $localIdTag) {
                     return 'Accepted';
                 }
@@ -354,7 +369,7 @@ class OCPPChargingPoint extends IPSModule
 
         // Take care of the 'Preparing' status which might want to trigger us the RemoteStartTransaction
         if ($payload['status'] === 'Preparing') {
-            if ($this->ReadPropertyBoolean('AutoStartTransaction')) {
+            if ($this->ReadPropertyInteger('ValidateIdTag') == self::START_AUTOMATIC) {
                 $this->RemoteStartTransaction($payload['connectorId']);
             }
         }
