@@ -64,9 +64,7 @@
                     ]
                 }
             ]
-        }
-    ],
-    "actions": [
+        },
         {
             "type": "Label",
             "caption": "Please use these settings for your OCPP configuration",
