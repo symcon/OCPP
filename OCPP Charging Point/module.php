@@ -26,9 +26,15 @@ class OCPPChargingPoint extends IPSModule
         $this->RegisterPropertyString('ValidIdTagList', '[]');
 
         //Variables
-        $this->RegisterVariableString('Vendor', $this->Translate('Vendor'), '', 1);
-        $this->RegisterVariableString('Model', $this->Translate('Model'), '', 2);
-        $this->RegisterVariableString('SerialNumber', $this->Translate('Serial Number'), '', 3);
+        $this->RegisterVariableString('Vendor', $this->Translate('Vendor'), [
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION
+        ], 1);
+        $this->RegisterVariableString('Model', $this->Translate('Model'), [
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION
+        ], 2);
+        $this->RegisterVariableString('SerialNumber', $this->Translate('Serial Number'), [
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION
+        ], 3);
     }
 
     public function Destroy()
@@ -46,7 +52,9 @@ class OCPPChargingPoint extends IPSModule
         $this->SetReceiveDataFilter('.*' . $this->ReadPropertyString('ChargePointIdentity') . '.*');
 
         // Create Variable to remember the current IdTag (RFID)
-        $this->RegisterVariableString('IdTag', $this->Translate('Last Id Tag'), '', 4);
+        $this->RegisterVariableString('IdTag', $this->Translate('Last Id Tag'), [
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION
+        ], 4);
     }
 
     public function ReceiveData($JSONString)
@@ -115,7 +123,7 @@ class OCPPChargingPoint extends IPSModule
     public function GetConfigurationForm()
     {
         $form = json_decode(file_get_contents(__DIR__ . '/form.json'), true);
-        $form['elements'][3]['visible'] = in_array($this->ReadPropertyInteger('ValidateIdTag'), [self::START_ID_LOCAL, self::START_ID_BOTH]);
+        $form['elements'][2]['visible'] = in_array($this->ReadPropertyInteger('ValidateIdTag'), [self::START_ID_LOCAL, self::START_ID_BOTH]);
         return json_encode($form);
     }
 
@@ -343,7 +351,10 @@ class OCPPChargingPoint extends IPSModule
             }
 
             $ident = sprintf('MeterValue_%d%s', $payload['connectorId'], $suffix_ident);
-            $this->RegisterVariableFloat($ident, sprintf($this->Translate('Meter Value (Connector %d)%s'), $payload['connectorId'], $suffix_name), '~Electricity.Wh', ($payload['connectorId'] + 1) * 100 + 10);
+            $this->RegisterVariableFloat($ident, sprintf($this->Translate('Meter Value (Connector %d)%s'), $payload['connectorId'], $suffix_name), [
+                'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+                'SUFFIX'       => ' ' . ($sampledValue['unit'] ?? 'Wh')
+            ], ($payload['connectorId'] + 1) * 100 + 10);
             $this->SetValue($ident, $sampledValue['value']);
         }
 
@@ -353,16 +364,25 @@ class OCPPChargingPoint extends IPSModule
     private function processStatusNotification(string $messageID, $payload)
     {
         $ident = sprintf('Available_%d', $payload['connectorId']);
-        $this->RegisterVariableBoolean($ident, sprintf($this->Translate('Available (Connector %d)'), $payload['connectorId']), '~Switch', ($payload['connectorId'] + 1) * 100);
+        $this->RegisterVariableBoolean($ident, sprintf($this->Translate('Available (Connector %d)'), $payload['connectorId']), [
+            'PRESENTATION'   => VARIABLE_PRESENTATION_SWITCH,
+            'USAGE_TYPE'     => 0,
+            'USE_ICON_FALSE' => false,
+            'ICON_TRUE'      => 'plug'
+        ], ($payload['connectorId'] + 1) * 100);
         $this->EnableAction($ident);
         $this->SetValue($ident, $payload['status'] != 'Unavailable');
 
         $ident = sprintf('Status_%d', $payload['connectorId']);
-        $this->RegisterVariableString($ident, sprintf($this->Translate('Status (Connector %d)'), $payload['connectorId']), '', ($payload['connectorId'] + 1) * 100 + 1);
+        $this->RegisterVariableString($ident, sprintf($this->Translate('Status (Connector %d)'), $payload['connectorId']), [
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION
+        ], ($payload['connectorId'] + 1) * 100 + 1);
         $this->SetValue($ident, $payload['status']);
 
         $ident = sprintf('ErrorCode_%d', $payload['connectorId']);
-        $this->RegisterVariableString($ident, sprintf($this->Translate('ErrorCode (Connector %d)'), $payload['connectorId']), '', ($payload['connectorId'] + 1) * 100 + 2);
+        $this->RegisterVariableString($ident, sprintf($this->Translate('ErrorCode (Connector %d)'), $payload['connectorId']), [
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION
+        ], ($payload['connectorId'] + 1) * 100 + 2);
         $this->SetValue($ident, $payload['errorCode']);
 
         $this->send($this->getStatusNotificationResponse($messageID));
@@ -378,7 +398,27 @@ class OCPPChargingPoint extends IPSModule
     private function processStartTransaction(string $messageID, $payload)
     {
         $ident = sprintf('Transaction_%d', $payload['connectorId']);
-        $this->RegisterVariableBoolean($ident, sprintf($this->Translate('Transaction (Connector %d)'), $payload['connectorId']), '', ($payload['connectorId'] + 1) * 100 + 3);
+        $this->RegisterVariableBoolean($ident, sprintf($this->Translate('Transaction (Connector %d)'), $payload['connectorId']), [
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+            'OPTIONS'      => [
+                [
+                    'Value'       => false,
+                    'Caption'     => $this->Translate('Inactive'),
+                    'IconActive ' => true,
+                    'IconValue'   => 'bolt-slash',
+                    'ColorActive' => false,
+                    'ColorValue'  => ''
+                ],
+                [
+                    'Value'       => true,
+                    'Caption'     => $this->Translate('Active'),
+                    'IconActive ' => true,
+                    'IconValue'   => 'bolt',
+                    'ColorActive' => false,
+                    'ColorValue'  => ''
+                ]
+            ]
+        ], ($payload['connectorId'] + 1) * 100 + 3);
         $this->SetValue($ident, true);
 
         // Transaction_* > OCPP Values
@@ -386,19 +426,29 @@ class OCPPChargingPoint extends IPSModule
 
         $transactionId = $this->generateTransactionID();
         $ident = sprintf('TransactionID_%d', $payload['connectorId']);
-        $this->RegisterVariableInteger($ident, sprintf($this->Translate('Transaction Id (Connector %d)'), $payload['connectorId']), '', ($payload['connectorId'] + 1) * 100 + 4);
+        $this->RegisterVariableInteger($ident, sprintf($this->Translate('Transaction Id (Connector %d)'), $payload['connectorId']), [
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+        ], ($payload['connectorId'] + 1) * 100 + 4);
         $this->SetValue($ident, $transactionId);
 
         $ident = sprintf('Transaction_Meter_Start_%d', $payload['connectorId']);
-        $this->RegisterVariableInteger($ident, sprintf($this->Translate('Transaction Meter Start (Connector %d)'), $payload['connectorId']), '', ($payload['connectorId'] + 1) * 100 + 5);
+        $this->RegisterVariableInteger($ident, sprintf($this->Translate('Transaction Meter Start (Connector %d)'), $payload['connectorId']), [
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+            'SUFFIX'       => ' Wh'
+        ], ($payload['connectorId'] + 1) * 100 + 5);
         $this->SetValue($ident, $payload['meterStart']);
 
         $ident = sprintf('Transaction_Meter_End_%d', $payload['connectorId']);
-        $this->RegisterVariableInteger($ident, sprintf($this->Translate('Transaction Meter End (Connector %d)'), $payload['connectorId']), '', ($payload['connectorId'] + 1) * 100 + 5);
+        $this->RegisterVariableInteger($ident, sprintf($this->Translate('Transaction Meter End (Connector %d)'), $payload['connectorId']), [
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+            'SUFFIX'       => ' Wh'
+        ], ($payload['connectorId'] + 1) * 100 + 5);
         $this->SetValue($ident, 0);
 
         $ident = sprintf('Transaction_ID_Tag_%d', $payload['connectorId']);
-        $this->RegisterVariableString($ident, sprintf($this->Translate('Transaction Id Tag (Connector %d)'), $payload['connectorId']), '', ($payload['connectorId'] + 1) * 100 + 6);
+        $this->RegisterVariableString($ident, sprintf($this->Translate('Transaction Id Tag (Connector %d)'), $payload['connectorId']), [
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION
+        ], ($payload['connectorId'] + 1) * 100 + 6);
 
         // Workaround: Alfen is sending a wrong IdTag. We need to use the IdTag from the last authorization
         if ($this->GetValue('Vendor') == 'Alfen BV') {
@@ -406,7 +456,10 @@ class OCPPChargingPoint extends IPSModule
         }
 
         $ident = sprintf('TransactionConsumption_%d', $payload['connectorId']);
-        $this->RegisterVariableInteger($ident, sprintf($this->Translate('Transaction Consumption (Connector %d)'), $payload['connectorId']), '', ($payload['connectorId'] + 1) * 100 + 5);
+        $this->RegisterVariableInteger($ident, sprintf($this->Translate('Transaction Consumption (Connector %d)'), $payload['connectorId']), [
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+            'SUFFIX'       => ' Wh'
+        ], ($payload['connectorId'] + 1) * 100 + 5);
         $this->SetValue($ident, 0);
 
         $this->send($this->getStartTransactionResponse($messageID, $transactionId, $this->getIdTagStatus($payload['idTag'])));
