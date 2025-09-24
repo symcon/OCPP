@@ -6,10 +6,6 @@
             "type": "ValidationTextBox"
         },
         {
-            "type": "Label",
-            "caption": "Some Wallboxes might keep stuck at 'Preparing' until a transaction is triggered"
-        },
-        {
             "type": "Select",
             "name": "ValidateIdTag",
             "width": "608px",
@@ -34,10 +30,6 @@
                 {
                     "caption": "... when an Id Tag is validated - Allow both Id Tag lists",
                     "value": 3
-                },
-                {
-                    "caption": "... manually only",
-                    "value": 4
                 }
             ],
             "onChange": "OCPP_UIUpdateCP($id, $ValidateIdTag);"

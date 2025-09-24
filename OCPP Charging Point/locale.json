@@ -16,7 +16,6 @@
             "Transaction Meter End (Connector %d)": "Transaktion Zählerstand Ende (Anschluss %d)",
             "Transaction Consumption (Connector %d)": "Transaktion Verbrauch (Anschluss %d)",
             "Available (Connector %d)": "Verfügbar (Anschluss %d)",
-            "Some Wallboxes might keep stuck at 'Preparing' until a transaction is triggered": "Einige Wallboxen bleiben im Zustand 'Preparing' bis eine Transaktion manuell gestartet wird",
             "https://www.symcon.de/en/service/documentation/module-reference/ocpp/": "https://www.symcon.de/de/service/dokumentation/modulreferenz/ocpp/",
             "OCPP Charging Point": "OCPP Ladepunkt",
             "Validate Id Tag (e.g. RFID cards)": "Id Tag validieren (z.B. für RFID Karten)",
