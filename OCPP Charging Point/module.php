@@ -486,7 +486,7 @@ class OCPPChargingPoint extends IPSModule
         }
 
         // Update transaction values
-        $this->SetValue(sprintf('Transaction_%d', $payload['connectorId']), false);
+        $this->SetValue(sprintf('Transaction_%d', $connectorId), false);
         $this->SetValue(sprintf('TransactionID_%d', $connectorId), 0);
         $this->SetValue(sprintf('Transaction_Meter_End_%d', $connectorId), $payload['meterStop']);
         $this->SetValue(sprintf('TransactionConsumption_%d', $connectorId), $payload['meterStop'] - $this->GetValue(sprintf('Transaction_Meter_Start_%d', $connectorId)));
