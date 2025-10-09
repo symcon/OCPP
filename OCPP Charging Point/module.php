@@ -129,8 +129,9 @@ class OCPPChargingPoint extends IPSModule
         $configurationData = json_decode($configurationDataString, true);
         if (isset($configurationData['configuration']['AutoStartTransaction']) && $configurationData['configuration']['AutoStartTransaction']) {
             $configurationData['configuration']['ValidateIdTag'] = self::START_AUTOMATIC;
+            return json_encode($configurationData);
         }
-        return json_encode($configurationData);
+        return "";
     }
 
     public function Update()
