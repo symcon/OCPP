@@ -35,6 +35,9 @@ class OCPPChargingPoint extends IPSModule
         $this->RegisterVariableString('SerialNumber', $this->Translate('Serial Number'), [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION
         ], 3);
+        $this->RegisterVariableString('IdTag', $this->Translate('Last Id Tag'), [
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION
+        ], 4);
     }
 
     public function Destroy()
@@ -50,11 +53,6 @@ class OCPPChargingPoint extends IPSModule
 
         // Filter only our ChargePoint
         $this->SetReceiveDataFilter('.*' . $this->ReadPropertyString('ChargePointIdentity') . '.*');
-
-        // Create Variable to remember the current IdTag (RFID)
-        $this->RegisterVariableString('IdTag', $this->Translate('Last Id Tag'), [
-            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION
-        ], 4);
     }
 
     public function ReceiveData($JSONString)
@@ -145,13 +143,6 @@ class OCPPChargingPoint extends IPSModule
     public function RemoteStartTransaction(int $ConnectorId)
     {
         $idTag = 'symcon';
-
-        // Update IdTag to Symcon if we remotely start the transaction
-        $value = @$this->GetValue('IdTag');
-        if ($value !== false) {
-            $this->SetValue('IdTag', $idTag);
-        }
-
         $this->send($this->getRemoteStartTransactionRequest($ConnectorId, $idTag));
     }
 
@@ -455,6 +446,8 @@ class OCPPChargingPoint extends IPSModule
             $payload['idTag'] = $this->GetValue('IdTag');
         }
 
+        $this->SetValue('Transaction_ID_Tag_%d', $payload['idTag']);
+
         $ident = sprintf('TransactionConsumption_%d', $payload['connectorId']);
         $this->RegisterVariableInteger($ident, sprintf($this->Translate('Transaction Consumption (Connector %d)'), $payload['connectorId']), [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
@@ -503,7 +496,9 @@ class OCPPChargingPoint extends IPSModule
         $status = $this->getIdTagStatus($payload['idTag']);
 
         // We only want to remember the last successful IdTag
-        // This will be used to sum up all transactions of this IdTag
+        // Normally the IdTag is only transmitted on StartTransaction,
+        // but some ChargePoints (e.g. Alfen) do not transmit it there
+        // Therefore we need to just remember it and use it there
         if ($status == 'Accepted') {
             $this->SetValue('IdTag', $payload['idTag']);
         }
