@@ -449,7 +449,7 @@ class OCPPChargingPoint extends IPSModule
             $payload['idTag'] = $this->GetValue('IdTag');
         }
 
-        $this->SetValue('Transaction_ID_Tag_%d', $payload['idTag']);
+        $this->SetValue($ident, $payload['idTag']);
 
         $ident = sprintf('TransactionConsumption_%d', $payload['connectorId']);
         $this->RegisterVariableInteger($ident, sprintf($this->Translate('Transaction Consumption (Connector %d)'), $payload['connectorId']), [

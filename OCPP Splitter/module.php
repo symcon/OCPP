@@ -92,7 +92,8 @@ class OCPPSplitter extends WebHookModule
             $data = json_decode($response, true);
 
             $ident = sprintf("Consumption_%s", $data['IdTag']);
-            $this->RegisterVariableInteger($ident, sprintf($this->Translate('Consumption (IdTag %s)'), $data['IdTag']), [
+            $idTag = $data['IdTag'] ? sprintf('IdTag %s', $data['IdTag']) : "No IdTag";
+            $this->RegisterVariableInteger($ident, sprintf($this->Translate('Consumption (%s)'), $idTag), [
                 'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
                 'SUFFIX'       => ' Wh'
             ]);
