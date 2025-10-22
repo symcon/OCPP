@@ -14,7 +14,6 @@ class OCPPChargingPoint extends IPSModule
     private const START_ID_BOTH = 3;
     private const START_MANUALLY = 4;
 
-
     public function Create()
     {
         //Never delete this line!
@@ -63,6 +62,7 @@ class OCPPChargingPoint extends IPSModule
         $messageType = $message['Message'][2];
         $payload = $message['Message'][3];
 
+        $result = "";
         switch ($messageType) {
             case 'BootNotification':
                 $this->SetValue('Vendor', $payload['chargePointVendor']);
@@ -80,7 +80,7 @@ class OCPPChargingPoint extends IPSModule
                 $this->processStartTransaction($messageID, $payload);
                 break;
             case 'StopTransaction':
-                $this->processStopTransaction($messageID, $payload);
+                $result = json_encode($this->processStopTransaction($messageID, $payload));
                 break;
             case 'Authorize':
                 $this->processAuthorize($messageID, $payload);
@@ -97,6 +97,8 @@ class OCPPChargingPoint extends IPSModule
             default:
                 break;
         }
+
+        return $result;
     }
 
     public function RequestAction($Ident, $Value)
@@ -490,6 +492,12 @@ class OCPPChargingPoint extends IPSModule
         $status = isset($payload['idTag']) ? $this->getIdTagStatus($payload['idTag']) : 'Accepted';
 
         $this->send($this->getStopTransactionResponse($messageID, $status));
+
+        // Return consumption data to properly forward it to the splitter
+        return [
+            "IdTag" => $this->GetValue(sprintf('Transaction_ID_Tag_%d', $connectorId)),
+            "Consumption" => $this->GetValue(sprintf('TransactionConsumption_%d', $connectorId)),
+        ];
     }
 
     private function processAuthorize(string $messageID, $payload)

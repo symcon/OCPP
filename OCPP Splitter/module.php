@@ -80,12 +80,24 @@ class OCPPSplitter extends WebHookModule
             return;
         }
 
-        //Send it to the children
-        $this->SendDataToChildren(json_encode([
+        // Send it to the children
+        $responses = $this->SendDataToChildren(json_encode([
             'DataID'              => '{54E04042-D715-71A0-BA80-ADD8B6CDF151}',
             'ChargePointIdentity' => $chargePointIdentity,
             'Message'             => $message
         ]));
+
+        // We want to check the response, if a charging was completed and we need to collect the charging data
+        foreach($responses as $response) {
+            $data = json_decode($response, true);
+
+            $ident = sprintf("Consumption_%s", $data['IdTag']);
+            $this->RegisterVariableInteger($ident, sprintf($this->Translate('Consumption (IdTag %s)'), $data['IdTag']), [
+                'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+                'SUFFIX'       => ' Wh'
+            ]);
+            $this->SetValue($ident, $this->GetValue($ident) + $data['Consumption']);
+        }
 
         /**
          * OCPP-j-1.6-specification Page 13
