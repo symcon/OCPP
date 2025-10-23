@@ -394,7 +394,7 @@ class OCPPChargingPoint extends IPSModule
         $ident = sprintf('Transaction_%d', $payload['connectorId']);
         $this->RegisterVariableBoolean($ident, sprintf($this->Translate('Transaction (Connector %d)'), $payload['connectorId']), [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-            'OPTIONS'      => [
+            'OPTIONS'      => json_encode([
                 [
                     'Value'       => false,
                     'Caption'     => $this->Translate('Inactive'),
@@ -411,7 +411,7 @@ class OCPPChargingPoint extends IPSModule
                     'ColorActive' => false,
                     'ColorValue'  => ''
                 ]
-            ]
+            ])
         ], ($payload['connectorId'] + 1) * 100 + 3);
         $this->SetValue($ident, true);
 
