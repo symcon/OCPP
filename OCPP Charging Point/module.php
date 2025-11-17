@@ -398,7 +398,7 @@ class OCPPChargingPoint extends IPSModule
                 [
                     'Value'       => false,
                     'Caption'     => $this->Translate('Inactive'),
-                    'IconActive ' => true,
+                    'IconActive'  => true,
                     'IconValue'   => 'bolt-slash',
                     'ColorActive' => false,
                     'ColorValue'  => ''
@@ -406,7 +406,7 @@ class OCPPChargingPoint extends IPSModule
                 [
                     'Value'       => true,
                     'Caption'     => $this->Translate('Active'),
-                    'IconActive ' => true,
+                    'IconActive'  => true,
                     'IconValue'   => 'bolt',
                     'ColorActive' => false,
                     'ColorValue'  => ''
