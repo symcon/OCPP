@@ -401,7 +401,7 @@ class OCPPChargingPoint extends IPSModule
                     'IconActive'  => true,
                     'IconValue'   => 'bolt-slash',
                     'ColorActive' => false,
-                    'ColorValue'  => ''
+                    'ColorValue'  => -1
                 ],
                 [
                     'Value'       => true,
@@ -409,7 +409,7 @@ class OCPPChargingPoint extends IPSModule
                     'IconActive'  => true,
                     'IconValue'   => 'bolt',
                     'ColorActive' => false,
-                    'ColorValue'  => ''
+                    'ColorValue'  => -1
                 ]
             ])
         ], ($payload['connectorId'] + 1) * 100 + 3);
