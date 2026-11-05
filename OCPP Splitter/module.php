@@ -91,6 +91,11 @@ class OCPPSplitter extends WebHookModule
         foreach($responses as $response) {
             $data = json_decode($response, true);
 
+            // Only StopTransactions with a known consumption return data
+            if (!is_array($data) || !isset($data['Consumption'])) {
+                continue;
+            }
+
             $ident = sprintf("Consumption_%s", $data['IdTag']);
             $idTag = $data['IdTag'] ? sprintf('IdTag %s', $data['IdTag']) : "No IdTag";
             $this->RegisterVariableInteger($ident, sprintf($this->Translate('Consumption (%s)'), $idTag), [

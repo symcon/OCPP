@@ -24,6 +24,15 @@ class OCPPChargingPoint extends IPSModule
         $this->RegisterPropertyInteger('ValidateIdTag', 0);
         $this->RegisterPropertyString('ValidIdTagList', '[]');
 
+        //Attributes
+        // Open transactions by TransactionID. A charge point may queue transactions while offline
+        // and deliver them later, so there can be more than one open transaction per connector.
+        $this->RegisterAttributeString('OpenTransactions', '{}');
+        // Last generated TransactionID. Must be unique, as queued StopTransactions may arrive weeks later
+        $this->RegisterAttributeInteger('LastTransactionID', 0);
+        // meterStop values of recently counted transactions to prevent counting a transaction twice
+        $this->RegisterAttributeString('CountedTransactions', '[]');
+
         //Variables
         $this->RegisterVariableString('Vendor', $this->Translate('Vendor'), [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION
@@ -80,7 +89,10 @@ class OCPPChargingPoint extends IPSModule
                 $this->processStartTransaction($messageID, $payload);
                 break;
             case 'StopTransaction':
-                $result = json_encode($this->processStopTransaction($messageID, $payload));
+                $consumption = $this->processStopTransaction($messageID, $payload);
+                if ($consumption !== null) {
+                    $result = json_encode($consumption);
+                }
                 break;
             case 'Authorize':
                 $this->processAuthorize($messageID, $payload);
@@ -391,8 +403,58 @@ class OCPPChargingPoint extends IPSModule
 
     private function processStartTransaction(string $messageID, $payload)
     {
-        $ident = sprintf('Transaction_%d', $payload['connectorId']);
-        $this->RegisterVariableBoolean($ident, sprintf($this->Translate('Transaction (Connector %d)'), $payload['connectorId']), [
+        // Workaround: Alfen is sending a wrong IdTag. We need to use the IdTag from the last authorization
+        if ($this->GetValue('Vendor') == 'Alfen BV') {
+            $payload['idTag'] = $this->GetValue('IdTag');
+        }
+
+        $transactionId = $this->generateTransactionID();
+        $timestamp = isset($payload['timestamp']) ? strtotime($payload['timestamp']) : false;
+        if ($timestamp === false) {
+            $timestamp = time();
+        }
+
+        // Charge points deliver queued StartTransactions of past (offline) sessions while another session
+        // might be running. Only the newest session of a connector is shown in the connector variables.
+        $transactions = $this->getOpenTransactions();
+        $isCurrent = true;
+        foreach ($transactions as $transaction) {
+            if (($transaction['ConnectorId'] == $payload['connectorId']) && ($transaction['Timestamp'] > $timestamp)) {
+                $isCurrent = false;
+                break;
+            }
+        }
+        $transactions[$transactionId] = [
+            'ConnectorId' => $payload['connectorId'],
+            'IdTag'       => $payload['idTag'],
+            'MeterStart'  => $payload['meterStart'],
+            'Timestamp'   => $timestamp,
+            'Created'     => time()
+        ];
+        $this->setOpenTransactions($transactions);
+
+        $this->registerTransactionVariables($payload['connectorId']);
+
+        if ($isCurrent) {
+            // Transaction_* > OCPP Values
+            // Transaction* > Internal values (without underscore!)
+            $this->SetValue(sprintf('Transaction_%d', $payload['connectorId']), true);
+            $this->SetValue(sprintf('TransactionID_%d', $payload['connectorId']), $transactionId);
+            $this->SetValue(sprintf('Transaction_Meter_Start_%d', $payload['connectorId']), $payload['meterStart']);
+            $this->SetValue(sprintf('Transaction_Meter_End_%d', $payload['connectorId']), 0);
+            $this->SetValue(sprintf('Transaction_ID_Tag_%d', $payload['connectorId']), $payload['idTag']);
+            $this->SetValue(sprintf('TransactionConsumption_%d', $payload['connectorId']), 0);
+        } else {
+            $this->SendDebug('StartTransaction', sprintf('Delayed transaction %d from %s. Not shown on the connector', $transactionId, date('c', $timestamp)), 0);
+        }
+
+        $this->send($this->getStartTransactionResponse($messageID, $transactionId, $this->getIdTagStatus($payload['idTag'])));
+    }
+
+    private function registerTransactionVariables(int $connectorId)
+    {
+        $ident = sprintf('Transaction_%d', $connectorId);
+        $this->RegisterVariableBoolean($ident, sprintf($this->Translate('Transaction (Connector %d)'), $connectorId), [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
             'OPTIONS'      => json_encode([
                 [
@@ -412,80 +474,78 @@ class OCPPChargingPoint extends IPSModule
                     'ColorValue'  => -1
                 ]
             ])
-        ], ($payload['connectorId'] + 1) * 100 + 3);
-        $this->SetValue($ident, true);
+        ], ($connectorId + 1) * 100 + 3);
 
-        // Transaction_* > OCPP Values
-        // Transaction* > Internal values (without underscore!)
-
-        $transactionId = $this->generateTransactionID();
-        $ident = sprintf('TransactionID_%d', $payload['connectorId']);
-        $this->RegisterVariableInteger($ident, sprintf($this->Translate('Transaction Id (Connector %d)'), $payload['connectorId']), [
+        $ident = sprintf('TransactionID_%d', $connectorId);
+        $this->RegisterVariableInteger($ident, sprintf($this->Translate('Transaction Id (Connector %d)'), $connectorId), [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-        ], ($payload['connectorId'] + 1) * 100 + 4);
-        $this->SetValue($ident, $transactionId);
+        ], ($connectorId + 1) * 100 + 4);
 
-        $ident = sprintf('Transaction_Meter_Start_%d', $payload['connectorId']);
-        $this->RegisterVariableInteger($ident, sprintf($this->Translate('Transaction Meter Start (Connector %d)'), $payload['connectorId']), [
+        $ident = sprintf('Transaction_Meter_Start_%d', $connectorId);
+        $this->RegisterVariableInteger($ident, sprintf($this->Translate('Transaction Meter Start (Connector %d)'), $connectorId), [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
             'SUFFIX'       => ' Wh'
-        ], ($payload['connectorId'] + 1) * 100 + 5);
-        $this->SetValue($ident, $payload['meterStart']);
+        ], ($connectorId + 1) * 100 + 5);
 
-        $ident = sprintf('Transaction_Meter_End_%d', $payload['connectorId']);
-        $this->RegisterVariableInteger($ident, sprintf($this->Translate('Transaction Meter End (Connector %d)'), $payload['connectorId']), [
+        $ident = sprintf('Transaction_Meter_End_%d', $connectorId);
+        $this->RegisterVariableInteger($ident, sprintf($this->Translate('Transaction Meter End (Connector %d)'), $connectorId), [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
             'SUFFIX'       => ' Wh'
-        ], ($payload['connectorId'] + 1) * 100 + 5);
-        $this->SetValue($ident, 0);
+        ], ($connectorId + 1) * 100 + 5);
 
-        $ident = sprintf('Transaction_ID_Tag_%d', $payload['connectorId']);
-        $this->RegisterVariableString($ident, sprintf($this->Translate('Transaction Id Tag (Connector %d)'), $payload['connectorId']), [
+        $ident = sprintf('Transaction_ID_Tag_%d', $connectorId);
+        $this->RegisterVariableString($ident, sprintf($this->Translate('Transaction Id Tag (Connector %d)'), $connectorId), [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION
-        ], ($payload['connectorId'] + 1) * 100 + 6);
+        ], ($connectorId + 1) * 100 + 6);
 
-        // Workaround: Alfen is sending a wrong IdTag. We need to use the IdTag from the last authorization
-        if ($this->GetValue('Vendor') == 'Alfen BV') {
-            $payload['idTag'] = $this->GetValue('IdTag');
-        }
-
-        $this->SetValue($ident, $payload['idTag']);
-
-        $ident = sprintf('TransactionConsumption_%d', $payload['connectorId']);
-        $this->RegisterVariableInteger($ident, sprintf($this->Translate('Transaction Consumption (Connector %d)'), $payload['connectorId']), [
+        $ident = sprintf('TransactionConsumption_%d', $connectorId);
+        $this->RegisterVariableInteger($ident, sprintf($this->Translate('Transaction Consumption (Connector %d)'), $connectorId), [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
             'SUFFIX'       => ' Wh'
-        ], ($payload['connectorId'] + 1) * 100 + 5);
-        $this->SetValue($ident, 0);
-
-        $this->send($this->getStartTransactionResponse($messageID, $transactionId, $this->getIdTagStatus($payload['idTag'])));
+        ], ($connectorId + 1) * 100 + 5);
     }
 
     private function processStopTransaction(string $messageID, $payload)
     {
+        $transactionId = intval($payload['transactionId'] ?? 0);
+        $meterStop = intval($payload['meterStop']);
+
         // Stop Transaction does not transmit the connectorId. We need to search it by the TransactionID.
-        $connectorId = false;
-        foreach (IPS_GetChildrenIDs($this->InstanceID) as $id) {
-            if (IPS_VariableExists($id)) {
-                $o = IPS_GetObject($id);
-                if (substr($o['ObjectIdent'], 0, 13) == 'TransactionID') {
-                    if (GetValue($id) == $payload['transactionId']) {
-                        $connectorId = str_replace('TransactionID_', '', $o['ObjectIdent']);
-                    }
-                }
+        $transactions = $this->getOpenTransactions();
+        $transaction = $transactions[$transactionId] ?? null;
+        if ($transaction !== null) {
+            unset($transactions[$transactionId]);
+            $this->setOpenTransactions($transactions);
+            $connectorId = $transaction['ConnectorId'];
+            $idTag = $transaction['IdTag'];
+            $meterStart = $transaction['MeterStart'];
+        } else {
+            // Transactions started with an older version are only known by the connector variables
+            $connectorId = $this->findConnectorByTransactionID($transactionId);
+            if ($connectorId !== false) {
+                $idTag = $this->GetValue(sprintf('Transaction_ID_Tag_%d', $connectorId));
+                $meterStart = $this->GetValue(sprintf('Transaction_Meter_Start_%d', $connectorId));
+            } else {
+                // Unknown transaction (e.g. TransactionID -1 for an offline transaction or a lost StartTransaction).
+                // We still need to accept it. Otherwise, the charge point retries it forever and holds back all following StopTransactions.
+                // Use the data of the StopTransaction itself to count the consumption.
+                $idTag = $payload['idTag'] ?? '';
+                $meterStart = $this->getTransactionBeginMeterValue($payload);
+                $this->SendDebug('StopTransaction', sprintf('Unknown TransactionID %d. Using transaction data of the StopTransaction', $transactionId), 0);
             }
         }
 
-        if ($connectorId === false) {
-            $this->SendDebug('Error', 'TransactionID not found', 0);
-            return;
-        }
+        $consumption = ($meterStart !== null) ? intval(round($meterStop - $meterStart)) : null;
 
-        // Update transaction values
-        $this->SetValue(sprintf('Transaction_%d', $connectorId), false);
-        $this->SetValue(sprintf('TransactionID_%d', $connectorId), 0);
-        $this->SetValue(sprintf('Transaction_Meter_End_%d', $connectorId), $payload['meterStop']);
-        $this->SetValue(sprintf('TransactionConsumption_%d', $connectorId), $payload['meterStop'] - $this->GetValue(sprintf('Transaction_Meter_Start_%d', $connectorId)));
+        // Update the connector variables only if they show this transaction
+        if (($connectorId !== false) && (@$this->GetIDForIdent(sprintf('TransactionID_%d', $connectorId)) !== false) && ($this->GetValue(sprintf('TransactionID_%d', $connectorId)) == $transactionId)) {
+            $this->SetValue(sprintf('Transaction_%d', $connectorId), false);
+            $this->SetValue(sprintf('TransactionID_%d', $connectorId), 0);
+            $this->SetValue(sprintf('Transaction_Meter_End_%d', $connectorId), $meterStop);
+            if ($consumption !== null) {
+                $this->SetValue(sprintf('TransactionConsumption_%d', $connectorId), $consumption);
+            }
+        }
 
         // The idTag might not be defined (Wallbox restarted and had to stop the transaction)
         // Therefore we can only validate if it is set (e.g. another RFID card was used to stop a running transaction)
@@ -493,10 +553,20 @@ class OCPPChargingPoint extends IPSModule
 
         $this->send($this->getStopTransactionResponse($messageID, $status));
 
+        if ($consumption === null) {
+            $this->SendDebug('StopTransaction', sprintf('Consumption of transaction %d is unknown', $transactionId), 0);
+            return null;
+        }
+
+        if ($this->isAlreadyCounted($meterStop)) {
+            $this->SendDebug('StopTransaction', sprintf('Transaction %d was already counted', $transactionId), 0);
+            return null;
+        }
+
         // Return consumption data to properly forward it to the splitter
         return [
-            "IdTag" => $this->GetValue(sprintf('Transaction_ID_Tag_%d', $connectorId)),
-            "Consumption" => $this->GetValue(sprintf('TransactionConsumption_%d', $connectorId)),
+            'IdTag'       => $idTag,
+            'Consumption' => $consumption,
         ];
     }
 
@@ -564,7 +634,87 @@ class OCPPChargingPoint extends IPSModule
 
     private function generateTransactionID()
     {
-        return rand(1, 5000);
+        // Older versions used random IDs between 1 and 5000. Start above that range,
+        // so that late StopTransactions of old transactions cannot match a new one
+        $transactionId = max($this->ReadAttributeInteger('LastTransactionID'), 5000) + 1;
+        if ($transactionId > 2147483647) {
+            $transactionId = 5001;
+        }
+        $this->WriteAttributeInteger('LastTransactionID', $transactionId);
+        return $transactionId;
+    }
+
+    private function getOpenTransactions()
+    {
+        $transactions = json_decode($this->ReadAttributeString('OpenTransactions'), true);
+        return is_array($transactions) ? $transactions : [];
+    }
+
+    private function setOpenTransactions(array $transactions)
+    {
+        // Drop transactions which never received a StopTransaction
+        $limit = time() - 90 * 24 * 60 * 60;
+        $transactions = array_filter($transactions, function ($transaction) use ($limit)
+        {
+            return $transaction['Created'] >= $limit;
+        });
+        $this->WriteAttributeString('OpenTransactions', json_encode((object) $transactions));
+    }
+
+    private function getTransactionBeginMeterValue($payload)
+    {
+        // StopTransaction.req may contain the meter value at the beginning of the transaction
+        foreach ($payload['transactionData'] ?? [] as $meterValue) {
+            foreach ($meterValue['sampledValue'] ?? [] as $sampledValue) {
+                if (($sampledValue['context'] ?? '') !== 'Transaction.Begin') {
+                    continue;
+                }
+                if (($sampledValue['measurand'] ?? 'Energy.Active.Import.Register') !== 'Energy.Active.Import.Register') {
+                    continue;
+                }
+                $value = floatval($sampledValue['value']);
+                if (($sampledValue['unit'] ?? 'Wh') === 'kWh') {
+                    $value *= 1000;
+                }
+                return $value;
+            }
+        }
+        return null;
+    }
+
+    private function findConnectorByTransactionID(int $transactionId)
+    {
+        if ($transactionId <= 0) {
+            return false;
+        }
+        foreach (IPS_GetChildrenIDs($this->InstanceID) as $id) {
+            if (IPS_VariableExists($id)) {
+                $o = IPS_GetObject($id);
+                if (substr($o['ObjectIdent'], 0, 14) == 'TransactionID_') {
+                    if (GetValue($id) == $transactionId) {
+                        return intval(str_replace('TransactionID_', '', $o['ObjectIdent']));
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    private function isAlreadyCounted(int $meterStop)
+    {
+        // The energy register is monotonic, so the meterStop identifies a transaction.
+        // This catches retransmitted StopTransactions and offline transactions (TransactionID -1)
+        // which some charge points deliver again as a new StartTransaction/StopTransaction pair
+        $counted = json_decode($this->ReadAttributeString('CountedTransactions'), true);
+        if (!is_array($counted)) {
+            $counted = [];
+        }
+        if (in_array($meterStop, $counted, true)) {
+            return true;
+        }
+        $counted[] = $meterStop;
+        $this->WriteAttributeString('CountedTransactions', json_encode(array_slice($counted, -100)));
+        return false;
     }
 
     private function getTriggerMessageRequest(string $messageType)
